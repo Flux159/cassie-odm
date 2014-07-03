@@ -1,6 +1,6 @@
 Cassie
 =====
-Cassie is a model layer and CQL generator that uses the node-cassandra-cql project and attempts to mimic mongoose's API for easy replacement.
+Cassie is a model layer and CQL generator that uses the node-cassandra-cql project and attempts to mimic mongoose's API for easy replacement. Heavily influenced by [casio](https://github.com/studybreak/casio) from Greg Melton and [Mongoose](https://github.com/LearnBoost/mongoose).
 
 Modeling
 ---------
