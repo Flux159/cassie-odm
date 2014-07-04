@@ -76,11 +76,37 @@ var User = cassie.model('User');
 
 // var newUser = new User({test: 'this', thing: 'blah'});
 
+console.log(User);
+
+var CatSchema = new Schema({'name': String});
+
+cassie.model('Cat', CatSchema);
+
+var Cat = cassie.model('Cat');
+
+// console.log(Cat);
+// console.log(User);
+
+var newUser = new User();
+console.log(newUser);
+
+var kitten = new Cat();
+console.log(kitten);
+
+// User.findOne({}, {debug: true}, function(err, results) {
+// 	if(err) {
+// 				console.log(err.message);
+// 				return cassie.close();
+// 	}
+// 	console.log(results);
+// 	cassie.close();
+// });
+
 User.find({fname: 'john', lname: 'smith'}, {debug: true, allow_filtering: true, fields: 'fname lname'}, function(err, results) {
 	if(err) {
 		console.log(err.message);
 		return cassie.close();
-	} 
+	}
 	// console.log(err);
 	console.log(results);
 	cassie.close();
