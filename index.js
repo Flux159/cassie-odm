@@ -76,7 +76,7 @@ var User = cassie.model('User');
 
 // var newUser = new User({test: 'this', thing: 'blah'});
 
-console.log(User);
+// console.log(User);
 
 var CatSchema = new Schema({'name': String});
 
@@ -87,11 +87,11 @@ var Cat = cassie.model('Cat');
 // console.log(Cat);
 // console.log(User);
 
-var newUser = new User();
-console.log(newUser);
+// var newUser = new User();
+// console.log(newUser);
 
-var kitten = new Cat();
-console.log(kitten);
+// var kitten = new Cat();
+// console.log(kitten);
 
 // User.findOne({}, {debug: true}, function(err, results) {
 // 	if(err) {
