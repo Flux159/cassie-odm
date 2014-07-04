@@ -70,7 +70,7 @@ var User = cassie.model('User');
 
 // console.log(User);
 
-User.find({}, function(err, results) {
+User.find({fname: 'smith', user_id: 1, some_array: ['testing', 'this']}, function(err, results) {
 	console.log(err);
 	console.log(results);
 	cassie.close();
