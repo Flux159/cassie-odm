@@ -217,3 +217,27 @@ User.find({fname: 'john', lname: 'smith'}, {debug: true, allow_filtering: true, 
 // 	});
 // });
 
+//NOTE: CQL may not support all of these on every field by default (see ALLOW FILTERING for more info) 
+//3 special functions / values: $gt $lt $in (in would be the array case), $gt and $lt should be parsed to >= and =< respectively
+//Note that these are defined as follows: created_at: {$gt: num1, $lt: num2}
+//or... name_list: {$in: ['array', 'of', 'names']}
+
+//A note: Cassandra doesn't have strictly less than or strictly greater than operators (they're just aliases for >= and =<)
+
+//Need to do TODOS:
+//TODO: Write documentation and Tests
+//TODO: Validations - like a pre.save thing (I think that this would be in schema to begin with, then added to each model as a list of "pre"-save things to do, ie: pre: [function, function, etc.])
+//TODO: BigInteger / Long support
+//TODO: Also, adding priam support (primarily for cql file support) would be nice to have
+
+//I don't think this should be allowed, they can use Cassie.query if they want to (and Cassie.connection if they want the manual node-cassandra-cql connection or Cassie.cql for running CQL)
+// this.query = function() {
+	//Manually run cql query (same as Cassie.cql - uses connection that this model holds though)			
+// };
+
+//Done TODOS:
+
+//TODO: Limit query when options is given as string (ie only return _id, etc. when '_id' is passed as options arg)
+//TODO: Add "limit" & "sort" arguments - need to allow for chaining
+//TODO: I should definitely be passing these as parameters (to prevent SQL injection)
+
