@@ -51,7 +51,7 @@
 var cassie = require('./lib/cassie'),
 		Schema = cassie.Schema;
 
-var config = require('./lib/config');
+var config = require('./config');
 
 var conn1 = cassie.connect(config.cassandra.options);
 var conn2 = cassie.connect(config.cassandra.options);
@@ -68,7 +68,13 @@ cassie.model('User', UserSchema);
 
 var User = cassie.model('User');
 
-console.log(User);
+// console.log(User);
+
+User.find({}, function(err, results) {
+	console.log(err);
+	console.log(results);
+	cassie.close();
+});
 
 // cassie.model('User', {test: 'error'});
 
