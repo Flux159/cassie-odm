@@ -72,7 +72,7 @@ var User = cassie.model('User');
 
 // console.log(User);
 
-User.find({user_id: [1745, 1746, 1744]}, function(err, results) {
+User.find({fname: 'john', lname: 'smith'}, {debug: true, allow_filtering: false, fields: 'fname lname'}, function(err, results) {
 	if(err) {
 		console.log(err.message);
 		return cassie.close();
