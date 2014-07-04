@@ -38,9 +38,19 @@ Queries
 ----------
 Construct CQL queries by passing arguments or chaining methods. 
 
+Creating and Updating
+----------
+
+Lightweight Transactions
+----------
+
 Examples
 ----------
 Write additional examples here.
+
+Common Issues and Data Modelling
+----------
+Write some common differences between CQL and RDBMs (SQL). What is not supported by CQL.
 
 Testing & Development
 ----------
@@ -62,6 +72,8 @@ More information about Cassandra including Installation Guides, Production Setup
 For information on how to Install Cassandra on a developer Mac OS X, Linux, or Windows machine, see the [wiki](http://wiki) or Cassandra's [getting started guide](http://wiki.apache.org/cassandra/GettingStarted).
 
 In addition, for information on developer and minimal production setups (including EC2 setups), see this [wiki link](http://wiki2).
+
+For information on adding nodes, migrating data
 
 For information on Cassandra, including why to choose Cassandra as your database, go to the [Apache Cassandra homepage](http://cassandra.apache.org/).
 

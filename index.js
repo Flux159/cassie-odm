@@ -64,17 +64,36 @@ var UserSchema = new Schema({
 
 // console.log(UserSchema);
 
-cassie.model('User', UserSchema);
+// cassie.model('User', UserSchema, {pluralize: true, lowercase: true});
+// cassie.model('User', UserSchema, {pluralize: false, lowercase: false});
+cassie.model('User', UserSchema, {pluralize: true});
 
 var User = cassie.model('User');
 
 // console.log(User);
 
-User.find({fname: 'smith', user_id: 1, some_array: ['testing', 'this']}, function(err, results) {
-	console.log(err);
+User.find({user_id: [1745, 1746, 1744]}, function(err, results) {
+	if(err) {
+		console.log(err.message);
+		return cassie.close();
+	} 
+	// console.log(err);
 	console.log(results);
 	cassie.close();
+	// cassie.close();
 });
+
+// User.find({fname: {$gt: 'smith', $lt:"epe"}, user_id: 1, some_object: {$in: ['this','is','array']}}, function(err, results) {
+// 	console.log(err);
+// 	console.log(results);
+// 	cassie.close();
+// });
+
+// User.find({fname: 'smith', user_id: 1, some_array: ['testing', 'this']}, function(err, results) {
+// 	console.log(err);
+// 	console.log(results);
+// 	cassie.close();
+// });
 
 // cassie.model('User', {test: 'error'});
 
@@ -102,7 +121,6 @@ User.find({fname: 'smith', user_id: 1, some_array: ['testing', 'this']}, functio
 // var winston = require('winston');
 
 // var priam = require('priam');
-// console.log(priam);
 
 // var options = {
 // 	config: {
