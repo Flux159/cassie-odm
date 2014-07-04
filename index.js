@@ -72,7 +72,11 @@ var User = cassie.model('User');
 
 // console.log(User);
 
-User.find({fname: 'john', lname: 'smith'}, {debug: true, allow_filtering: false, fields: 'fname lname'}, function(err, results) {
+// console.log(User);
+
+// var newUser = new User({test: 'this', thing: 'blah'});
+
+User.find({fname: 'john', lname: 'smith'}, {debug: true, allow_filtering: true, fields: 'fname lname'}, function(err, results) {
 	if(err) {
 		console.log(err.message);
 		return cassie.close();
