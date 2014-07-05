@@ -107,27 +107,42 @@ newUser.save({debug: true, timing: true, logger: null},function(err) {
 		}
 		console.log(results.toString());
 		
-		newUser.remove({timing: true}, function(err) {
+		var firstResult = results[0];
+		firstResult.lname = "Dole";
+		firstResult.save({debug: true}, function(err) {
 			if(err) {
 				console.log(err);
 				return cassie.close();
 			}
-			console.log("After remove");
-		
-			// var options = {debug: true, allow_filtering: true, fields: 'fname lname'};
-			var options = {timing: true};
-			User.find({}, options, function(err, results) {
+			
+			newUser.remove({timing: true}, function(err) {
 				if(err) {
-					console.log(err.message);
+					console.log(err);
 					return cassie.close();
 				}
-				// console.log(err);
-				console.log(results.toString());
-				cassie.close();
-				// cassie.close();
-			});
+				console.log("After remove");
 		
+				// var options = {debug: true, allow_filtering: true, fields: 'fname lname'};
+				var options = {timing: true};
+				User.find({}, options, function(err, results) {
+					if(err) {
+						console.log(err.message);
+						return cassie.close();
+					}
+					// console.log(err);
+					console.log(results.toString());
+					cassie.close();
+					// cassie.close();
+				});
+		
+			});
+			
+			
+			
+			
 		});
+		
+
 		
 	});
 
