@@ -88,6 +88,9 @@ var Cat = cassie.model('Cat');
 
 var newUser = new User({user_id: 1800, fname: "test", lname: "bob"});
 
+// console.log(newUser.toString());
+console.log(newUser);
+
 //Testing save, find, remove, find
 newUser.save({debug: true, timing: true, logger: null},function(err) {
 	if(err) {
@@ -102,7 +105,7 @@ newUser.save({debug: true, timing: true, logger: null},function(err) {
 			console.log(err);
 			return cassie.close();
 		}
-		console.log(results);
+		console.log(results.toString());
 		
 		newUser.remove({timing: true}, function(err) {
 			if(err) {
@@ -119,7 +122,7 @@ newUser.save({debug: true, timing: true, logger: null},function(err) {
 					return cassie.close();
 				}
 				// console.log(err);
-				console.log(results);
+				console.log(results.toString());
 				cassie.close();
 				// cassie.close();
 			});
