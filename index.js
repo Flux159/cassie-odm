@@ -99,7 +99,7 @@ newUser.save({debug: true, timing: true, logger: null},function(err) {
 	var options = {timing: true};
 	User.find({}, options, function(err, results) {
 		if(err) {
-			console.log(err.message);
+			console.log(err);
 			return cassie.close();
 		}
 		console.log(results);
