@@ -87,7 +87,7 @@ var Cat = cassie.model('Cat');
 var newUser = new User({user_id: 1800, fname: "test", lname: "bob"});
 
 //Testing save, find, remove, find
-newUser.save(function(err) {
+newUser.save({debug: true},function(err) {
 	if(err) {
 		console.log(err);
 		return cassie.close();
