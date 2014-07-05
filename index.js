@@ -78,6 +78,8 @@ var User = cassie.model('User');
 
 // console.log(User);
 
+// var winston = require('winston');
+
 var CatSchema = new Schema({'name': String});
 
 cassie.model('Cat', CatSchema);
@@ -87,14 +89,14 @@ var Cat = cassie.model('Cat');
 var newUser = new User({user_id: 1800, fname: "test", lname: "bob"});
 
 //Testing save, find, remove, find
-newUser.save({debug: true},function(err) {
+newUser.save({debug: true, timing: true, logger: null},function(err) {
 	if(err) {
 		console.log(err);
 		return cassie.close();
 	}
 	console.log("Saved a new user!");
 	
-	var options = null;
+	var options = {timing: true};
 	User.find({}, options, function(err, results) {
 		if(err) {
 			console.log(err.message);
@@ -102,7 +104,7 @@ newUser.save({debug: true},function(err) {
 		}
 		console.log(results);
 		
-		newUser.remove(function(err) {
+		newUser.remove({timing: true}, function(err) {
 			if(err) {
 				console.log(err);
 				return cassie.close();
@@ -110,7 +112,7 @@ newUser.save({debug: true},function(err) {
 			console.log("After remove");
 		
 			// var options = {debug: true, allow_filtering: true, fields: 'fname lname'};
-			var options = null;
+			var options = {timing: true};
 			User.find({}, options, function(err, results) {
 				if(err) {
 					console.log(err.message);
