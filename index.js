@@ -57,7 +57,7 @@ var conn1 = cassie.connect(config.cassandra.options);
 var conn2 = cassie.connect(config.cassandra.options);
 
 var UserSchema = new Schema({
-	'user_id': Number,
+	'user_id': {type: cassie.types.uuid, primary: true, default: 'uuid'},
  	'fname': String,
 	'lname': String
 });
@@ -84,12 +84,12 @@ cassie.model('Cat', CatSchema);
 
 var Cat = cassie.model('Cat');
 
-var newUser = new User({user_id: 1800, fname: "test", lname: "user"});
+var newUser = new User({user_id: 1800, fname: "test", lname: "bob"});
 
 newUser.save(function(err) {
 	if(err) {
 		console.log(err);
-		// return cassie.close();
+		return cassie.close();
 	}
 	console.log("Saved a new user!");
 	
@@ -105,9 +105,6 @@ newUser.save(function(err) {
 		cassie.close();
 		// cassie.close();
 	});
-	
-	
-	
 	
 	// cassie.close();
 });
