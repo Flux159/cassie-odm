@@ -89,48 +89,50 @@ var Cat = cassie.model('Cat');
 var newUser = new User({user_id: 1800, fname: "test", lname: "bob"});
 
 // console.log(newUser.toString());
-console.log(newUser);
+// console.log(newUser);
 
 //Testing save, find, remove, find
-newUser.save({debug: true, timing: true, logger: null},function(err) {
+var options = {debug: true, prettyDebug: true, timing: true, logger: null};
+newUser.save(options,function(err) {
 	if(err) {
 		console.log(err);
 		return cassie.close();
 	}
-	console.log("Saved a new user!");
+	// console.log("Saved a new user!");
 	
-	var options = {timing: true};
+	
 	User.find({}, options, function(err, results) {
 		if(err) {
 			console.log(err);
 			return cassie.close();
 		}
-		console.log(results.toString());
+		// console.log(results.toString());
 		
 		var firstResult = results[0];
 		firstResult.lname = "Dole";
-		firstResult.save({debug: true}, function(err) {
+		firstResult.fname = "Bob";
+		firstResult.save(options, function(err) {
 			if(err) {
 				console.log(err);
 				return cassie.close();
 			}
 			
-			newUser.remove({timing: true}, function(err) {
+			newUser.remove(options, function(err) {
 				if(err) {
 					console.log(err);
 					return cassie.close();
 				}
-				console.log("After remove");
+				// console.log("After remove");
 		
 				// var options = {debug: true, allow_filtering: true, fields: 'fname lname'};
-				var options = {timing: true};
+				// var options = {timing: true};
 				User.find({}, options, function(err, results) {
 					if(err) {
 						console.log(err.message);
 						return cassie.close();
 					}
 					// console.log(err);
-					console.log(results.toString());
+					// console.log(results.toString());
 					cassie.close();
 					// cassie.close();
 				});
