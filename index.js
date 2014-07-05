@@ -84,6 +84,46 @@ cassie.model('Cat', CatSchema);
 
 var Cat = cassie.model('Cat');
 
+var newUser = new User({user_id: 1800, fname: "test", lname: "user"});
+
+newUser.save(function(err) {
+	if(err) {
+		console.log(err);
+		// return cassie.close();
+	}
+	console.log("Saved a new user!");
+	
+	// var options = {debug: true, allow_filtering: true, fields: 'fname lname'};
+	var options = null;
+	User.find({}, options, function(err, results) {
+		if(err) {
+			console.log(err.message);
+			return cassie.close();
+		}
+		// console.log(err);
+		console.log(results);
+		cassie.close();
+		// cassie.close();
+	});
+	
+	
+	
+	
+	// cassie.close();
+});
+
+
+
+// var kitten = new Cat({name: 'evee'});
+// kitten.save({debug: true}, function(err) {
+// 	if(err) {
+// 		console.log(err);
+// 		return cassie.close();
+// 	}
+// 	console.log("Saved the kitten!");
+// 	cassie.close();
+// });
+
 // console.log(Cat);
 // console.log(User);
 
@@ -102,16 +142,16 @@ var Cat = cassie.model('Cat');
 // 	cassie.close();
 // });
 
-User.find({fname: 'john', lname: 'smith'}, {debug: true, allow_filtering: true, fields: 'fname lname'}, function(err, results) {
-	if(err) {
-		console.log(err.message);
-		return cassie.close();
-	}
-	// console.log(err);
-	console.log(results);
-	cassie.close();
-	// cassie.close();
-});
+// User.find({fname: 'john', lname: 'smith'}, {debug: true, allow_filtering: true, fields: 'fname lname'}, function(err, results) {
+// 	if(err) {
+// 		console.log(err.message);
+// 		return cassie.close();
+// 	}
+// 	// console.log(err);
+// 	console.log(results);
+// 	cassie.close();
+// 	// cassie.close();
+// });
 
 // User.find({fname: {$gt: 'smith', $lt:"epe"}, user_id: 1, some_object: {$in: ['this','is','array']}}, function(err, results) {
 // 	console.log(err);
