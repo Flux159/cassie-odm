@@ -86,6 +86,7 @@ var Cat = cassie.model('Cat');
 
 var newUser = new User({user_id: 1800, fname: "test", lname: "bob"});
 
+//Testing save, find, remove, find
 newUser.save(function(err) {
 	if(err) {
 		console.log(err);
@@ -93,19 +94,38 @@ newUser.save(function(err) {
 	}
 	console.log("Saved a new user!");
 	
-	// var options = {debug: true, allow_filtering: true, fields: 'fname lname'};
 	var options = null;
 	User.find({}, options, function(err, results) {
 		if(err) {
 			console.log(err.message);
 			return cassie.close();
 		}
-		// console.log(err);
 		console.log(results);
-		cassie.close();
-		// cassie.close();
+		
+		newUser.remove(function(err) {
+			if(err) {
+				console.log(err);
+				return cassie.close();
+			}
+			console.log("After remove");
+		
+			// var options = {debug: true, allow_filtering: true, fields: 'fname lname'};
+			var options = null;
+			User.find({}, options, function(err, results) {
+				if(err) {
+					console.log(err.message);
+					return cassie.close();
+				}
+				// console.log(err);
+				console.log(results);
+				cassie.close();
+				// cassie.close();
+			});
+		
+		});
+		
 	});
-	
+
 	// cassie.close();
 });
 
