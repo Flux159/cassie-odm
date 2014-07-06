@@ -82,7 +82,17 @@ var UserSchema = new Schema({
 // cassie.model('User', UserSchema, {pluralize: true, lowercase: true});
 // cassie.model('User', UserSchema, {pluralize: false, lowercase: false});
 
-cassie.model('User', UserSchema, {pluralize: true});
+//I think default should be pluralize, lowercase when syncing tables, etc.
+
+cassie.model('User', UserSchema);
+
+var CatSchema = new Schema({'name': {type: String, primary: true}});
+
+cassie.model('Cat', CatSchema);
+
+var MagicSchema = new Schema({'name': {type: String, primary: true}, 'magic': String, type: String});
+
+cassie.model('Magic', MagicSchema);
 
 //Before using anywhere, check if keyspace exists & sync tables
 
