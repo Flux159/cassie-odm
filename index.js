@@ -59,7 +59,8 @@ var conn1 = cassie.connect(config.cassandra.options);
 var UserSchema = new Schema({
 	'user_id': {type: cassie.types.uuid, primary: true, default: 'uuid'},
  	'fname': String,
-	'lname': String
+	// 'lname': String,
+	'blah': Number
 }, {sync: true});
 
 // var UserSchema = new Schema({
@@ -84,9 +85,11 @@ var UserSchema = new Schema({
 
 //I think default should be pluralize, lowercase when syncing tables, etc.
 
+// console.log(cassie.types);
+
 cassie.model('User', UserSchema);
 
-var CatSchema = new Schema({'name': {type: String, primary: true}});
+var CatSchema = new Schema({'name': {type: String}, 'cat_id': {type: cassie.types.uuid, primary: true}, 'ref_id': cassie.types.uuid});
 
 cassie.model('Cat', CatSchema);
 
@@ -101,12 +104,16 @@ cassie.model('Illusion', IllusionSchema);
 
 //Before using anywhere, check if keyspace exists & sync tables
 
-cassie.syncTables(config.cassandra.options, {debug: true, prettyDebug: true}, function(err, results) {
-	console.log("Done syncing tables.");
+cassie.syncTables(config.cassandra.options, {debug: true, prettyDebug: true, warning: true}, function(err, results) {
+	// console.log("Done syncing tables.");
 	
 	
 	
 	var User = cassie.model('User');
+	
+	cassie.close(function() {
+		console.log("Closed connection.");
+	});
 	
 });
 
