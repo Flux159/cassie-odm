@@ -90,16 +90,20 @@ var CatSchema = new Schema({'name': {type: String, primary: true}});
 
 cassie.model('Cat', CatSchema);
 
-var MagicSchema = new Schema({'name': {type: String, primary: true}, 'magic': String, type: String});
+//Don't sync this one!
+var MagicSchema = new Schema({'name': {type: String, primary: true}, 'magic': String, type: String}, {sync: false});
 
 cassie.model('Magic', MagicSchema);
 
+var IllusionSchema = new Schema({'name': {type: String, primary: true}, 'trick': String});
+cassie.model('Illusion', IllusionSchema);
+
 //Before using anywhere, check if keyspace exists & sync tables
 
-cassie.checkKeyspace(config.cassandra.options, {debug: true}, function(err, result) {
-	console.log("Done checking keyspace");
+// cassie.checkKeyspace(config.cassandra.options, {debug: true}, function(err, result) {
+	// console.log("Done checking keyspace");
 	
-	cassie.syncTables({debug: true}, function(err, results) {
+	cassie.syncTables(config.cassandra.options, {debug: true, prettyDebug: true}, function(err, results) {
 		console.log("Done syncing tables.");
 		
 		
@@ -108,7 +112,21 @@ cassie.checkKeyspace(config.cassandra.options, {debug: true}, function(err, resu
 		
 	});
 	
-});
+// });
+
+// cassie.checkKeyspace(config.cassandra.options, {debug: true}, function(err, result) {
+// 	console.log("Done checking keyspace");
+//
+// 	cassie.syncTables({debug: true}, function(err, results) {
+// 		console.log("Done syncing tables.");
+//
+//
+//
+// 		var User = cassie.model('User');
+//
+// 	});
+//
+// });
 
 // console.log(User);
 
