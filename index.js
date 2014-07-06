@@ -54,7 +54,7 @@ var cassie = require('./lib/cassie'),
 var config = require('./config');
 
 var conn1 = cassie.connect(config.cassandra.options);
-var conn2 = cassie.connect(config.cassandra.options);
+// var conn2 = cassie.connect(config.cassandra.options);
 
 var UserSchema = new Schema({
 	'user_id': {type: cassie.types.uuid, primary: true, default: 'uuid'},
@@ -66,9 +66,10 @@ var UserSchema = new Schema({
 
 // cassie.model('User', UserSchema, {pluralize: true, lowercase: true});
 // cassie.model('User', UserSchema, {pluralize: false, lowercase: false});
+
 cassie.model('User', UserSchema, {pluralize: true});
 
-var User = cassie.model('User');
+// var User = cassie.model('User');
 
 // console.log(User);
 
@@ -80,77 +81,84 @@ var User = cassie.model('User');
 
 // var winston = require('winston');
 
-var CatSchema = new Schema({'name': String});
+// var CatSchema = new Schema({'name': {type: String, primary: true}});
 
-cassie.model('Cat', CatSchema);
+// cassie.model('Cat', CatSchema);
 
-var Cat = cassie.model('Cat');
-
-var newUser = new User({user_id: 1800, fname: "test", lname: "bob"});
+// var Cat = cassie.model('Cat');
 
 // console.log(newUser.toString());
 // console.log(newUser);
 
-//Testing save, find, remove, find
-var options = {debug: true, prettyDebug: true, timing: true, logger: null};
-newUser.save(options,function(err) {
-	if(err) {
-		console.log(err);
-		return cassie.close();
-	}
-	// console.log("Saved a new user!");
-	
-	
-	User.find({}, options, function(err, results) {
-		if(err) {
-			console.log(err);
-			return cassie.close();
-		}
-		// console.log(results.toString());
-		
-		var firstResult = results[0];
-		firstResult.lname = "Dole";
-		firstResult.fname = "Bob";
-		firstResult.save(options, function(err) {
-			if(err) {
-				console.log(err);
-				return cassie.close();
-			}
-			
-			newUser.remove(options, function(err) {
-				if(err) {
-					console.log(err);
-					return cassie.close();
-				}
-				// console.log("After remove");
-		
-				// var options = {debug: true, allow_filtering: true, fields: 'fname lname'};
-				// var options = {timing: true};
-				User.find({}, options, function(err, results) {
-					if(err) {
-						console.log(err.message);
-						return cassie.close();
-					}
-					// console.log(err);
-					// console.log(results.toString());
-					cassie.close();
-					// cassie.close();
-				});
-		
-			});
-			
-			
-			
-			
-		});
-		
+//Testing save, find, remove, find - uncomment from here
 
-		
-	});
+// var newUser = new User({user_id: 1800, fname: "test", lname: "bob"});
+//
+// var options = {debug: true, prettyDebug: true, timing: true, logger: null};
+// newUser.save(options,function(err) {
+// 	if(err) {
+// 		console.log(err);
+// 		return cassie.close();
+// 	}
+// 	// console.log("Saved a new user!");
+//
+//
+// 	User.find({}, options, function(err, results) {
+// 		if(err) {
+// 			console.log(err);
+// 			return cassie.close();
+// 		}
+// 		// console.log(results.toString());
+//
+// 		var firstResult = results[0];
+// 		firstResult.lname = "Dole";
+// 		firstResult.fname = "Bob";
+// 		firstResult.save(options, function(err) {
+// 			if(err) {
+// 				console.log(err);
+// 				return cassie.close();
+// 			}
+//
+// 			newUser.remove(options, function(err) {
+// 				if(err) {
+// 					console.log(err);
+// 					return cassie.close();
+// 				}
+// 				// console.log("After remove");
+//
+// 				// var options = {debug: true, allow_filtering: true, fields: 'fname lname'};
+// 				// var options = {timing: true};
+// 				User.find({}, options, function(err, results) {
+// 					if(err) {
+// 						console.log(err.message);
+// 						return cassie.close();
+// 					}
+// 					// console.log(err);
+// 					// console.log(results.toString());
+// 					cassie.close();
+// 					// cassie.close();
+// 				});
+//
+// 			});
+//
+//
+//
+//
+// 		});
+//
+//
+//
+// 	});
+//
+// 	// cassie.close();
+// });
 
-	// cassie.close();
-});
 
+
+
+
+
+//OTHER
 
 
 // var kitten = new Cat({name: 'evee'});
