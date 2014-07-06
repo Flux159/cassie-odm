@@ -62,6 +62,15 @@ var UserSchema = new Schema({
 	'lname': String
 });
 
+// console.log(config);
+
+// replicationStrategy = {'class': 'NetworkTopologyStrategy'};
+// for(var key in config.cassandra.options.replication.strategy_options) {
+	// replicationStrategy[key] = config.cassandra.options.replication.strategy_options[key];
+// }
+// replicationStrategy = JSON.stringify(replicationStrategy);
+// console.log(replicationStrategy);
+
 // console.log(UserSchema);
 
 // cassie.model('User', UserSchema, {pluralize: true, lowercase: true});
@@ -69,7 +78,21 @@ var UserSchema = new Schema({
 
 cassie.model('User', UserSchema, {pluralize: true});
 
-// var User = cassie.model('User');
+//Before using anywhere, check if keyspace exists & sync tables
+
+cassie.checkKeyspace(config.cassandra.options, {debug: true}, function(err, result) {
+	console.log("Done checking keyspace");
+	
+	cassie.syncTables({debug: true}, function(err, results) {
+		console.log("Done syncing tables.");
+		
+		
+		
+		var User = cassie.model('User');
+		
+	});
+	
+});
 
 // console.log(User);
 

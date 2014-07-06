@@ -11,8 +11,8 @@ module.exports = {
 						//password: 'test1234',
 						staleTime: 100, //Time in milliseconds before trying to reconnect to a node
 						maxExecuteRetries: 3, //The maximum amount of times an execute can be retried in case server is unhealthy
-						poolSize: 5 //Number of connections to open for each host: Default is 1 - I think I should change this in cassie to be 5 as default
-            },
+						poolSize: 5, //Number of connections to open for each host: Default is 1 - I think I should change this in cassie to be 5 as default
+            
 						
 						//Cassie specific (sync, create keyspaces, replication strategy)
 						sync: true, //Default is true (note that it only creates keyspaces, adds columnfamilies, adds columns, syncing never deletes - use cqlsh manually to delete)
@@ -26,5 +26,6 @@ module.exports = {
 								// 'us-west':3
 							}
 						}
+					}
     },
 }
