@@ -96,23 +96,19 @@ var MagicSchema = new Schema({'name': {type: String, primary: true}, 'magic': St
 cassie.model('Magic', MagicSchema);
 
 var IllusionSchema = new Schema({'name': {type: String, primary: true}, 'trick': String});
+
 cassie.model('Illusion', IllusionSchema);
 
 //Before using anywhere, check if keyspace exists & sync tables
 
-// cassie.checkKeyspace(config.cassandra.options, {debug: true}, function(err, result) {
-	// console.log("Done checking keyspace");
+cassie.syncTables(config.cassandra.options, {debug: true, prettyDebug: true}, function(err, results) {
+	console.log("Done syncing tables.");
 	
-	cassie.syncTables(config.cassandra.options, {debug: true, prettyDebug: true}, function(err, results) {
-		console.log("Done syncing tables.");
-		
-		
-		
-		var User = cassie.model('User');
-		
-	});
 	
-// });
+	
+	var User = cassie.model('User');
+	
+});
 
 // cassie.checkKeyspace(config.cassandra.options, {debug: true}, function(err, result) {
 // 	console.log("Done checking keyspace");
