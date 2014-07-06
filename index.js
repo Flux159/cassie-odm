@@ -60,7 +60,13 @@ var UserSchema = new Schema({
 	'user_id': {type: cassie.types.uuid, primary: true, default: 'uuid'},
  	'fname': String,
 	'lname': String
-});
+}, {sync: true});
+
+// var UserSchema = new Schema({
+// 	'user_id': {type: cassie.types.uuid, default: 'uuid'},
+//  	'fname': String,
+// 	'lname': String
+// }, {sync: true, primary: ['user_id', 'fname']});
 
 // console.log(config);
 
