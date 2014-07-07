@@ -1,6 +1,6 @@
 Cassie
 =====
-Cassie is a model layer and CQL generator that uses the [node-cassandra-cql](https://github.com/jorgebay/node-cassandra-cql) project and attempts to mimic mongoose's API to allow for easy switching between MongoDB and Cassandra.
+Cassie is a model layer and CQL generator that uses the [node-cassandra-cql](https://github.com/jorgebay/node-cassandra-cql) project and attempts to mimic most of mongoose's API to allow for easy switching between MongoDB and Cassandra. Note that Cassie-ODM is not currently a full 1:1 mapping to mongoose's API (and probably will never be due to certain architectural differences between Cassandra and MongoDB's query languages).
 
 Getting Started
 ----------
@@ -34,35 +34,47 @@ Plugins
 ----------
 Models support plugins. Plugins allow you to share schema properties between models and allow for pre-save hooks.
 
+CRUD
+----------
+Create, Read, Update, Delete operations on Schemas.
+
 Queries
 ----------
 Construct CQL queries by passing arguments or chaining methods. 
 
 Creating and Updating
 ----------
+INSERT and UPDATE queries.
 
 Lightweight Transactions
 ----------
+IF NOT EXISTS option when creating queries. Note that IF field = value is not currently supported for updates.
+
+Removing
+----------
+DELETE query. 
+
+Batching
+----------
+How to batch queries together (fewer network roundtrips).
 
 Examples
 ----------
 Write additional examples here.
 
-Common Issues and Data Modelling
+Common Issues and Data Modelling Notes
 ----------
 Write some common differences between CQL and RDBMs (SQL). What is not supported by CQL.
 
 Testing & Development
 ----------
 Pre-reqs:
-Nodejs installed and a Cassandra server running on localhost:9160
+Nodejs installed and a Cassandra server running on localhost:9160 (see [wiki](http://wiki) for more information on installing Cassandra).
 Clone the repository and run the following from command line:
 ```
-npm test-init && npm test
+npm install && npm test
 ```
-Note: 'npm test-init' creates a keyspace "CassieTest" on your local Cassandra server
-
-'npm test' runs the tests.
+Note: 'npm test' creates a keyspace "CassieODMTest" on your local Cassandra server.
 
 Submit pull requests for any bug fixes!
 
@@ -73,7 +85,7 @@ For information on how to Install Cassandra on a developer Mac OS X, Linux, or W
 
 In addition, for information on developer and minimal production setups (including EC2 setups), see this [wiki link](http://wiki2).
 
-For information on adding nodes, migrating data
+For information on adding nodes, migrating data, and creating snapshots and backups, see this [wiki link](http://wiki3).
 
 For information on Cassandra, including why to choose Cassandra as your database, go to the [Apache Cassandra homepage](http://cassandra.apache.org/).
 

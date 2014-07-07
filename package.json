@@ -3,13 +3,13 @@
 	"name": "cassie-odm",
 	"description": "ODM for Cassandra that uses node-cassandra-cql",
 	"version": "0.0.1",
-	"homepage": "git://github.com/Flux159/cassie-odm",
+	"homepage": "http://Flux159.github.io/cassie-odm",
 	"repository": {
 		"type": "git",
 		"url": "git://github.com/Flux159/cassie-odm.git"
 	},
 	"scripts": {
-		"test": "./test/testsuite.sh"
+		"test": "node node_modules/mocha/bin/mocha \"test/**/*.js\""
 	},
 	"engines": {
 		"node": ">=0.10.0"
@@ -17,9 +17,9 @@
 	"dependencies": {
 		"async": "0.9.0",
 		"node-cassandra-cql": "0.5.0",
-		"long": "1.1.5",
-		"node-uuid": "1.4.0",
-		"pluralize": "0.0.10"
+		"pluralize": "0.0.10",
+        "node-uuid": "1.4.1",
+        "long": "1.1.5"
 	},
 	"devDependencies": {
 		"mocha": "1.20.1"
