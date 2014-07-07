@@ -63,6 +63,8 @@ var UserSchema = new Schema({
 	'blah': Number
 }, {sync: true});
 
+//UserSchema.test();
+
 // var UserSchema = new Schema({
 // 	'user_id': {type: cassie.types.uuid, default: 'uuid'},
 //  	'fname': String,
