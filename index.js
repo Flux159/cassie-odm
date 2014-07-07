@@ -59,8 +59,8 @@ var conn1 = cassie.connect(config.cassandra.options);
 var UserSchema = new Schema({
 	'user_id': {type: cassie.types.uuid, primary: true, default: 'uuid'},
  	'fname': String,
-	// 'lname': String,
-	'blah': Number
+	'lname': {type: String, index:true},
+	'blah': {type: Number, index: true}
 }, {sync: true});
 
 //UserSchema.test();
