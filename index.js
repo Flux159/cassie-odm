@@ -94,7 +94,7 @@ var CatSchema = new Schema({'name': {type: String}, 'cat_id': {type: cassie.type
 cassie.model('Cat', CatSchema);
 
 //Don't sync this one!
-var MagicSchema = new Schema({'name': {type: String, primary: true}, 'magic': String, type: String}, {sync: false});
+var MagicSchema = new Schema({'name': {type: String, primary: true}, 'magic': String, type: String});
 
 cassie.model('Magic', MagicSchema);
 

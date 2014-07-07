@@ -17,8 +17,9 @@ cassie.model('User', UserSchema);
 var User = cassie.model('User');
 
 var newUser = new User({user_id: 1800, fname: "test", lname: "bob"});
+var newUser2 = new User({user_id: 1801, fname: "test2", lname: "steve"});
 
-var options = {debug: true, prettyDebug: true, timing: true, logger: null, if_not_exists: true};
+var options = {debug: true, prettyDebug: true, timing: true, logger: null, if_not_exists: false};
 
 newUser.save(options,function(err) {
 	if(err) {
@@ -26,49 +27,59 @@ newUser.save(options,function(err) {
 		return cassie.close();
 	}
 
-	User.find({user_id: {$in: [1744,1745,1746]}}, options, function(err, results) {
+	newUser2.save(options, function(err) {
 		if(err) {
 			console.log(err);
 			return cassie.close();
 		}
 
-		var firstResult = results[0];
-		firstResult.lname = "Dole";
-		firstResult.fname = "Bob";
-		firstResult.save(options, function(err) {
+		User.find({user_id: 1745}, options, function(err, results) {
 			if(err) {
 				console.log(err);
 				return cassie.close();
 			}
 
-			newUser.remove(options, function(err) {
+			var firstResult = results[0];
+			firstResult.lname = "Dole";
+			firstResult.fname = "Bob";
+			firstResult.save(options, function(err) {
 				if(err) {
 					console.log(err);
 					return cassie.close();
 				}
 
-				//Doing a find for 'smith' will have to search all rows
-				//In general, good data modeling practices make sure that you're using primary key correctly, otherwise reads will be very slow (high latency & cpu usage)
-				User.find({lname: 'smith'}, options, function(err, results) {
+				newUser.remove(options, function(err) {
 					if(err) {
-						console.log(err.message);
+						console.log(err);
 						return cassie.close();
 					}
-					cassie.close();
-				});
 
-				// User.find({user_id: {$in: [1745, 1746, 1744, 1800, 1234]}}, options, function(err, results) {
-				// 	if(err) {
-				// 		console.log(err.message);
-				// 		return cassie.close();
-				// 	}
-				// 	cassie.close();
-				// });
+					//Doing a find for 'smith' will have to search all rows
+					//In general, good data modeling practices make sure that you're using primary key correctly, otherwise reads will be very slow (high latency & cpu usage)
+					User.find({lname: 'smith'}, options, function(err, results) {
+						if(err) {
+							console.log(err.message);
+							return cassie.close();
+						}
+						// cassie.close();
+					});
+
+					// User.find({user_id: {$in: [1745, 1746, 1744, 1800, 1234]}}, options, function(err, results) {
+					// 	if(err) {
+					// 		console.log(err.message);
+					// 		return cassie.close();
+					// 	}
+					// 	cassie.close();
+					// });
+
+				});
 
 			});
 
-		});
-
+		});		
+		
+		
 	});
+
 
 });
