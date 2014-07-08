@@ -138,14 +138,54 @@ describe('Basic', function () {
     });
 
     describe("update", function () {
-        it('should return -1 when the value is not present', function () {
-            assert.equal(-1, [1, 2, 3].indexOf(4));
+        it('Should update an existing model', function (done) {
+
+            var Trick = cassie.model('Trick');
+            var trick = new Trick({name: 'blah'});
+            trick.save(function(err) {
+                if(err) throw "Error in update test: saving trick";
+
+                trick.name = 'test';
+
+//                var options = {debug: true, prettyDebug: true};
+                var options = {};
+                trick.save(options, function(err) {
+                    if(err) throw "Error in update test: updating trick";
+
+                    Trick.find({id: trick.id}, function(err, results) {
+
+                        assert(results[0].name === 'test');
+                        assert(results[0].id === trick.id);
+
+                        done();
+                    });
+
+                });
+
+            });
+
         });
     });
 
     describe("findById", function () {
-        it('should return -1 when the value is not present', function () {
-            assert.equal(-1, [1, 2, 3].indexOf(4));
+        it('Should find a model by id', function (done) {
+
+            var Trick = cassie.model('Trick');
+            var trick = new Trick({name: 'blah'});
+
+            trick.save(function(err) {
+                if(err) throw "Error in findById test: saving trick";
+
+                Trick.findById(trick.id, function(err, results) {
+                    if(err) throw "Error in findById test: saving trick";
+
+                    assert.equal(results[0].name, trick.name);
+                    assert.equal(results[0].id, trick.id);
+
+                    done();
+                });
+
+            });
         });
     });
 
