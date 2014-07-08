@@ -131,12 +131,29 @@ TrickSchema.post('remove', function(model) {
     console.log("Testing post remove");
 });
 
+TrickSchema.validate('name', function(model, field) {
+    return (model[field]);
+});
+
+TrickSchema.plugin(function(schema, options) {
+    console.log("Plugin woo!");
+
+    schema.virtual('hidden', function(model) {
+        return {
+            'name': model.name,
+            'hidden': 'field'
+        };
+    });
+
+//    console.log(schema);
+//    console.log(options);
+}, {testing: 'options'});
+
 cassie.model('Trick', TrickSchema);
 
 var Trick = cassie.model('Trick');
-var trick = new Trick({name: 'Testing'});
-
-
+var trick = new Trick({name: 'illusion'});
+var badTrick = new Trick({});
 
 //Before using anywhere, check if keyspace exists & sync tables
 
@@ -146,14 +163,23 @@ cassie.syncTables(config.cassandra.options, {debug: true, prettyDebug: true, war
     trick.save({debug: true}, function(err, results) {
         console.log("Saved trick");
 
-        trick.remove({debug: true}, function(err, results) {
+        console.log(trick.hidden);
 
-            var User = cassie.model('User');
+        badTrick.save({debug: true}, function(err, results) {
 
-            cassie.close(function() {
-                console.log("Closed connection.");
+
+            trick.remove({debug: true}, function(err, results) {
+
+                var User = cassie.model('User');
+
+                cassie.close(function() {
+                    console.log("Closed connection.");
+                });
             });
+
         });
+
+
 
     });
 	
