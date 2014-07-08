@@ -6,24 +6,24 @@ Getting Started
 ----------
 ```
 
-    var cassie = require('cassie-odm'),
-        Schema = cassie.Schema;
+    var cassie = require('cassie-odm');
     cassie.connect({keyspace: "mykeyspace", hosts: ["127.0.0.1:9042"]});
     
-    var CatSchema = new Schema({name: String});
+    var CatSchema = new cassie.Schema({name: String});
     var Cat = cassie.model('Cat', CatSchema);
     
     var kitty = new Cat({ name: 'Eevee'});
     kitty.save(function(err) {
         if(err) return console.log(err);
         console.log("meow");
+        cassie.close();
     });
 
 ```
 
 Client Connections
 ----------
-Client connections are handled by node-cassandra-cql. Cassie encapsulates a connection internally, but you can also use the node-cassandra-cql connection directly:
+Client connections are handled by node-cassandra-cql. Cassie encapsulates a connection internally, but you can also use the node-cassandra-cql connection directly for CQL queries:
 
 ```
 
@@ -38,7 +38,7 @@ Client connections are handled by node-cassandra-cql. Cassie encapsulates a conn
 
 Modeling
 ---------
-Modeling is the process of defining your Schemas. Although Cassandra is a NoSQL database, it is required to make a column family (similar to a table in a RDB) with a primary key. Cassie makes this process easier by helping you organize your code by defining Schemas in a single location (for easy reference). Modeling also allows you to perform validations and apply pre and post hooks to your models. Finally, Cassie will actually sync your tables forward to make rapid development easier (ie tables and fields that don't exist in Cassandra will be created. Cassie does not delete tables or fields as this could lead to data loss. Cassie can warn you if there are unused fields though, see the "Sync" section for more information).
+Modeling is the process of defining your Schemas. Although Cassandra is a NoSQL database, it is required to make a column family with a primary key. Cassie makes this process easier by helping you organize your code by defining Schemas in a single location (for easy reference). If you do not specify a primary key, Cassie will automatically generate an 'id' key for you. Modeling also allows you to perform validations and apply pre and post hooks to your models. Finally, Cassie will actually sync your tables forward to make rapid development easier ( tables and fields that don't exist in Cassandra will be created. Cassie does not delete tables or fields as this could lead to data loss. Cassie can warn you if there are unused fields though, see the "Sync" section for more information).
 
 ```
 
@@ -70,7 +70,8 @@ Modeling is the process of defining your Schemas. Although Cassandra is a NoSQL 
     var Blog = cassie.model('Blog', BlogSchema);
     
     //Sync the schemas with Cassandra to ensure that they exist and contain the appropriate fields (see additional notes on the limitations of syncing)
-    cassie.syncTables(config.cassandra.options, {debug: true, warning: true}, function(err, results) {
+    var syncOptions = {debug: true, prettyDebug:true, warning: true};
+    cassie.syncTables(config.cassandra.options, syncOptions, function(err, results) {
     
         //Creates a new user
         var newUser = new User({username: 'ManBearPig', email: 'AlGore@gmail.com', hashedPassword: 'Never-do-this-use-crypto-module'});
@@ -117,7 +118,7 @@ Construct CQL queries by passing arguments or chaining methods.
 
 CRUD (Create, Read, Update, Delete) Operations
 ----------
-Create, Read, Update, Delete operations on Schemas.
+Create, Read, Update, Delete operations on Models.
 
 Select (Find)
 ----------
@@ -177,7 +178,7 @@ Write some common differences between CQL and RDBMs (SQL). What is not supported
 
 Why Cassandra
 ----------
-Why would you want to use Cassandra with all those limitations? Distributed, fault tolerant design (kind of like auto-sharded, auto-replicated, master-master). Designed so that if any one node goes down, you can create another node, attach it to the cluster, and retrieve the "lost" data without any downtime. Linearly scalable reads and writes (and storage), when you need more reads/sec or writes/sec, you can simply add another node to the cluster. Finally, with Cassie, relatively easy data modeling in nodejs that compares to the ease of use of MongoDB using Mongoose (once you understand some data modeling differences).
+Why would you want to use Cassandra with those limitations? Cassandra provides a truly distributed, fault tolerant design (kind of like auto-sharded, auto-replicated, master-master). Cassandra is designed so that if any one node goes down, you can create another node, attach it to the cluster, and retrieve the "lost" data without any downtime. Cassandra provides linearly scalable reads and writes based on the number of nodes in a cluster. In other words, when you need more reads/sec or writes/sec, you can simply add another node to the cluster. Finally, with Cassie, you get relatively easy data modeling in nodejs that compares to the ease of use of MongoDB using Mongoose (once you understand some data modeling differences).
 
 Data Modelling Notes
 ----------
@@ -195,7 +196,7 @@ Cassie Side:
 * Paging - need to support some form of client side paging for common use case (I'm thinking primary key timestamp based?)
 * Default - when adding a column, specify default value (in schema / sync)
 * Optional - specify table name when creating (in schema options - should automatically sync to use that tableName)
-* Collections - and collection modifications (UPDATE collection in single query with IN clause)
+* Collections - collection modifications (UPDATE/REMOVE collection in single query with IN clause)
 
 Driver Side:
 * Input Streaming - not supported by node-cassandra-cql yet
