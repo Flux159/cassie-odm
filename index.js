@@ -106,9 +106,21 @@ cassie.model('Illusion', IllusionSchema);
 
 var TrickSchema = new Schema({'name': {type: String}});
 
+TrickSchema.post('init', function(model) {
+    console.log("Testing post init");
+});
+
+TrickSchema.post('validate', function(model) {
+    console.log("Testing postvalidate")
+});
+
 TrickSchema.pre('save', function(model) {
     console.log(model);
     console.log("Testing presave");
+});
+
+TrickSchema.post('save', function(model) {
+    console.log("Testing postsave");
 });
 
 cassie.model('Trick', TrickSchema);
