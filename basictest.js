@@ -61,6 +61,10 @@ newUser.save(options,function(err) {
 							console.log(err.message);
 							return cassie.close();
 						}
+
+                        cassie.close(function() {
+                            console.log("Closed connection.");
+                        });
 					});
 
 				});
