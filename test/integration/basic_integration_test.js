@@ -6,7 +6,7 @@ var cassie = require('../../lib/cassie'),
 var connectOptions = {hosts: ["127.0.0.1:9042"], keyspace: "CassieODMTest"};
 cassie.connect(connectOptions);
 
-var TrickSchema = new Schema({'name': {type: String}});
+var TrickSchema = new Schema({'name': {type: String, index:true}});
 
 TrickSchema.post('init', function (model) {
 });
@@ -41,11 +41,12 @@ TrickSchema.plugin(function (schema) {
 
 cassie.model('Trick', TrickSchema);
 
+var ids = [];
 
 describe('Basic', function () {
 
     before(function (done) {
-        cassie.syncTables(connectOptions, function (err, results) {
+        cassie.syncTables(connectOptions, {debug: true, prettyDebug: true}, function (err, results) {
             done();
         });
     });
@@ -59,12 +60,15 @@ describe('Basic', function () {
 
     describe("find", function () {
         it('Should save a trick and find the saved trick.', function (done) {
-
+//            if(err) throw "Error saving during save and find test.";
             var Trick = cassie.model('Trick');
             var trick = new Trick({name: 'illusion'});
 
-            trick.save(function (err, results) {
+            trick.save(function (err) {
                 Trick.find({id: trick.id}, function (err, results) {
+
+                    ids.push(trick.id);
+
                     assert.equal(results[0].name, trick.name);
                     assert.equal(results[0].id, trick.id);
                     done();
@@ -74,14 +78,44 @@ describe('Basic', function () {
     });
 
     describe("remove", function () {
-        it('should return -1 when the value is not present', function () {
-            assert.equal(-1, [1, 2, 3].indexOf(4));
+        it('Should save a trick, find it, remove it, then return no results', function (done) {
+            var Trick = cassie.model('Trick');
+            var trick = new Trick({name: 'illusion'});
+
+            trick.save(function (err) {
+                Trick.find({id: trick.id}, function (err, results) {
+                    assert.equal(results[0].name, trick.name);
+                    assert.equal(results[0].id, trick.id);
+                    trick.remove(function (err) {
+                        if (err) throw "Error removing during remove test.";
+
+                        Trick.find({id: trick.id}, function (err, results) {
+                            if (err) throw "Error finding second time during remove test.";
+
+                            assert.equal(results.length, 0);
+                            done();
+                        });
+
+                    });
+                });
+            });
         });
+
     });
 
     describe("findOne", function () {
-        it('should return -1 when the value is not present', function () {
-            assert.equal(-1, [1, 2, 3].indexOf(4));
+        it('Should find one object named illusion', function (done) {
+
+            var Trick = cassie.model('Trick');
+
+            Trick.findOne({id: {$in: ids}, name: 'illusion'}, {debug: true}, function(err, results) {
+//                if(err) throw "Error in findOne test";
+
+                console.log(err);
+//                assert.equal(results.length, 1);
+
+                done();
+            });
         });
     });
 
