@@ -19,7 +19,7 @@ var User = cassie.model('User');
 var newUser = new User({user_id: 1800, fname: "test", lname: "bob"});
 var newUser2 = new User({user_id: 1801, fname: "test2", lname: "steve"});
 
-var options = {prettyDebug: true, timing: true, logger: null, if_not_exists: false};
+var options = {debug: true, prettyDebug: true, timing: true, logger: null, if_not_exists: false};
 
 newUser.save(options,function(err) {
 	if(err) {
