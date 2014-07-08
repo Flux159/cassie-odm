@@ -6,7 +6,7 @@ var cassie = require('../../lib/cassie'),
 var connectOptions = {hosts: ["127.0.0.1:9042"], keyspace: "CassieODMTest"};
 cassie.connect(connectOptions);
 
-var TrickSchema = new Schema({'name': {type: String, index:true}});
+var TrickSchema = new Schema({'name': {type: String, index: true}});
 
 TrickSchema.post('init', function (model) {
 });
@@ -46,7 +46,9 @@ var ids = [];
 describe('Basic', function () {
 
     before(function (done) {
-        cassie.syncTables(connectOptions, {debug: true, prettyDebug: true}, function (err, results) {
+        var options = {};
+//        var options = {debug: true, prettyDebug: true};
+        cassie.syncTables(connectOptions, options, function (err, results) {
             done();
         });
     });
@@ -108,14 +110,30 @@ describe('Basic', function () {
 
             var Trick = cassie.model('Trick');
 
-            Trick.findOne({id: {$in: ids}, name: 'illusion'}, {debug: true}, function(err, results) {
-//                if(err) throw "Error in findOne test";
+            var trick2 = new Trick({name: 'illusion'});
+            trick2.save(function (err) {
+                if (err) throw "Error in findOne test: save";
 
-                console.log(err);
-//                assert.equal(results.length, 1);
+                var options = {};
+//                var options = {debug: true, prettyDebug: true};
 
-                done();
+                Trick.find({name: 'illusion'}, options, function(err, results) {
+                    if (err) throw "Error in findOne test: find";
+
+                    assert.ok(results.length > 1);
+
+                    Trick.findOne({name: 'illusion'}, options, function (err, result) {
+                        if (err) throw "Error in findOne test";
+
+                        assert.ok(result);
+
+                        done();
+                    });
+
+                });
+
             });
+
         });
     });
 
@@ -126,12 +144,6 @@ describe('Basic', function () {
     });
 
     describe("findById", function () {
-        it('should return -1 when the value is not present', function () {
-            assert.equal(-1, [1, 2, 3].indexOf(4));
-        });
-    });
-
-    describe("remove", function () {
         it('should return -1 when the value is not present', function () {
             assert.equal(-1, [1, 2, 3].indexOf(4));
         });
