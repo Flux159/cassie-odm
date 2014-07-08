@@ -106,20 +106,32 @@ cassie.model('Illusion', IllusionSchema);
 
 var TrickSchema = new Schema({'name': {type: String}});
 
+TrickSchema.pre('save', function(model) {
+    console.log(model);
+    console.log("Testing presave");
+});
+
 cassie.model('Trick', TrickSchema);
+
+var Trick = cassie.model('Trick');
+var trick = new Trick({name: 'Testing'});
+
+
 
 //Before using anywhere, check if keyspace exists & sync tables
 
 cassie.syncTables(config.cassandra.options, {debug: true, prettyDebug: true, warning: true}, function(err, results) {
 	// console.log("Done syncing tables.");
-	
-	
-	
-	var User = cassie.model('User');
-	
-	cassie.close(function() {
-		console.log("Closed connection.");
-	});
+
+    trick.save({debug: true}, function(err, results) {
+        console.log("Saved trick");
+
+        var User = cassie.model('User');
+
+        cassie.close(function() {
+            console.log("Closed connection.");
+        });
+    });
 	
 });
 
