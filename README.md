@@ -5,10 +5,12 @@ Cassie is a model layer and CQL generator that uses the [node-cassandra-cql](htt
 Getting Started
 ----------
 ```
-var cassie = require('cassie-odm');
+var cassie = require('cassie-odm'),
+    Schema = cassie.Schema;
 cassie.connect({keyspace: "mykeyspace", hosts: ["127.0.0.1:9042"]});
 
-var Cat = cassie.model('Cat', {name: String});
+var CatSchema = new Schema({name: String});
+var Cat = cassie.model('Cat', CatSchema);
 
 var kitty = new Cat({ name: 'Eevee'});
 kitty.save(function(err) {
@@ -20,39 +22,130 @@ kitty.save(function(err) {
 
 Client Connections
 ----------
-Client connections are handled by node-cassandra-cql.
+Client connections are handled by node-cassandra-cql. Cassie encapsulates a connection internally, but you can also use the node-cassandra-cql connection directly:
+
+```
+var cassie = require('cassie-odm');
+var connection = cassie.connect({keyspace: "mykeyspace", hosts: ["127.0.0.1:9042"]});
+
+connection.execute("SELECT * FROM cats", [], function(err, results) {
+    if(err) return console.log(err);
+    console.log("meow");
+});
+```
 
 Modeling
 ---------
-Modeling is the process of defining your Schemas. Although Cassandra is a NoSQL database, it is helpful to organize your code by defining Schemas in a single location (for easy reference). Modeling also allows you to perform validations and apply pre-save hooks to your models.
+Modeling is the process of defining your Schemas. Although Cassandra is a NoSQL database, it is required to make a column family (similar to a table in a RDB) with a primary key. Cassie makes this process easier by helping you organize your code by defining Schemas in a single location (for easy reference). Modeling also allows you to perform validations and apply pre and post hooks to your models. Finally, Cassie will actually sync your tables forward to make rapid development easier (ie tables and fields that don't exist in Cassandra will be created. Cassie does not delete tables or fields as this could lead to data loss. Cassie can warn you if there are unused fields though, see the "Sync" section for more information).
 
-Validations
-----------
-Write validation stuff.
+```
+var cassie = require('cassie-odm'); //Require cassie module
+var connection = cassie.connect({keyspace: "mykeyspace", hosts: ["127.0.0.1:9042"]}); //Connect to local cassandra server
 
-Plugins
-----------
-Models support plugins. Plugins allow you to share schema properties between models and allow for pre-save hooks.
+//Creates a User Schema
+var UserSchema = new Schema({
+    username: String,
+    email: {type: String, required: true},
+    hashedPassword: {type: String, required: true},
+    blogs: []});
 
-CRUD
-----------
-Create, Read, Update, Delete operations on Schemas.
+//Adds a validator for username
+UserSchema.validate('username', function(user) {
+    return (user.username !== null);
+});
+
+//Add a post-save hook
+UserSchema.post('save', function(model) {
+    console.log("A new user signed up!");
+});
+
+//Creates a Blog Schema
+var BlogSchema = new Schema({title: {type: String, required: true}, content: String, author: String});
+
+//Registers the schemas with cassie
+var User = cassie.model('User', UserSchema);
+var Blog = cassie.model('Blog', BlogSchema);
+
+//Sync the schemas with Cassandra to ensure that they exist and contain the appropriate fields (see additional notes on the limitations of syncing)
+cassie.syncTables(config.cassandra.options, {debug: true, warning: true}, function(err, results) {
+
+    //Creates a new user
+    var newUser = new User({username: 'ManBearPig', email: 'AlGore@gmail.com', hashedPassword: 'Never-do-this-use-crypto-module'});
+
+    //Asynchronous function that returns to provided callback
+    newUser.save(function(err, results) {
+        if(err) console.log(err);
+        
+        //Creates a new blog
+        var newBlog = new Blog({title: 'Global warming and Manbearpig', content: 'Half-man, half-bear, half-pig...', author: new_user.username});
+    
+        //.save() without a callback returns a Query object. Here we batch together multiple queries to execute them together
+        var firstQuery = newBlog.save();
+        
+        //Note that for types other than arrays and maps, cassie tracks changes for saving, however, since blogs is an array, we need to mark it as modified
+        //Also note that after running .save(), newBlog has a generated field called 'id'. This only occurs if cassie created the primary key for us (see "Primary Keys" for more info).
+        newUser.blogs.push(newBlog.id);
+        newUser.markModified('blogs');
+        
+        //Get second query to batch
+        var secondQuery = newUser.save();
+    
+        //Run batch cql commands
+        cassie.batch([firstQuery, secondQuery], {consistency: cassie.consistencies.quorum}, function(err, results) {
+            if(err) console.log(err);
+            
+            //Close the connection since we're done
+            cassie.close();
+        });
+    });
+
+});
+
+```
+The above example shows a lot of code, but is relatively simple to understand (particularly if you've used Mongoose). First, we connect to the Cassandra server. Then, we create some schemas with cassie (along with a validator for username and a post-save hook on users). After we register the Schemas with cassie, we sync the tables to make sure that Cassandra knows that they exist (see "Sync" for more information on this and the limitations of syncing). Also note that we haven't provided a primary key in any of our schemas. In general, its good practice to explicitly define a primary key in a NoSQL database (and Cassandra requires it actually). Cassie takes care of this requirement by generating a field called 'id' if we don't specify a primary key. After we call the sync tables function, we can now create users and blogs in our database. First, we create a new user and save it. Then we create a new blog and store the query to be called after we do some other updates. Once we've completed our updates, we gather the queries and send them in a batch to our Cassandra server using the cassie.batch command to create our blog post and update our user. Finally, we close the connection when we're done.
+
+Some things to note about the above example:
+    First, never store a password in plain text, ideally, you would use the crypto module to generate a hash of the user's password and store that in your database. Second, this data model is not very efficient for a number of reasons that would make more sense if you read through the "Data Modeling Notes" and Cassandra's documentation / architecture (not posting here for brevity).
 
 Queries
 ----------
 Construct CQL queries by passing arguments or chaining methods. 
 
+CRUD (Create, Read, Update, Delete) Operations
+----------
+Create, Read, Update, Delete operations on Schemas.
+
 Creating and Updating
 ----------
 INSERT and UPDATE queries.
 
-Lightweight Transactions
-----------
-IF NOT EXISTS option when creating queries. Note that IF field = value is not currently supported for updates.
-
 Removing
 ----------
 DELETE query. 
+
+Sync
+----------
+Write Sync stuff.
+
+Primary Keys
+----------
+Write Primary Key information.
+
+Validations
+----------
+Write validation stuff.
+
+Hooks
+----------
+Pre, Post hooks for save, remove. Post hooks for init & validate.
+
+Plugins
+----------
+Models support plugins. Plugins allow you to share schema properties between models and allow for pre-save hooks.
+
+Lightweight Transactions
+----------
+IF NOT EXISTS option when creating queries. Note that IF field = value is not currently supported for updates.
 
 Batching
 ----------
@@ -62,9 +155,17 @@ Examples
 ----------
 Write additional examples here.
 
-Common Issues and Data Modelling Notes
+Mongoose API Differences
+----------
+API differences between Cassie and Mongoose.
+
+Common Issues using Cassandra
 ----------
 Write some common differences between CQL and RDBMs (SQL). What is not supported by CQL.
+
+Data Modelling Notes
+----------
+Write some notes on how to properly model data in Cassandra.
 
 Testing & Development
 ----------
