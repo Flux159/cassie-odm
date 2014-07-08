@@ -104,6 +104,10 @@ var IllusionSchema = new Schema({'name': {type: String, primary: true}, 'trick':
 
 cassie.model('Illusion', IllusionSchema);
 
+var TrickSchema = new Schema({'name': {type: String}});
+
+cassie.model('Trick', TrickSchema);
+
 //Before using anywhere, check if keyspace exists & sync tables
 
 cassie.syncTables(config.cassandra.options, {debug: true, prettyDebug: true, warning: true}, function(err, results) {
