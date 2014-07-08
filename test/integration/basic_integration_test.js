@@ -3,99 +3,103 @@ var assert = require('assert');
 var cassie = require('../../lib/cassie'),
     Schema = cassie.Schema;
 
-describe('Basic', function() {
+var connectOptions = {hosts: ["127.0.0.1:9042"], keyspace: "CassieODMTest"};
+cassie.connect(connectOptions);
 
-    describe("find", function() {
-        it('should return -1 when the value is not present', function(done) {
-//            assert.equal(-1, [1,2,3].indexOf(4));
+var TrickSchema = new Schema({'name': {type: String}});
 
-            var connectOptions = {hosts: ["127.0.0.1:9042"], keyspace: "CassieODMTest"};
-            cassie.connect(connectOptions);
+TrickSchema.post('init', function (model) {
+});
 
-            var TrickSchema = new Schema({'name': {type: String}});
+TrickSchema.post('validate', function (model) {
+});
 
-            TrickSchema.post('init', function(model) {
-//    console.log("Testing post init");
-            });
+TrickSchema.pre('save', function (model) {
+});
 
-            TrickSchema.post('validate', function(model) {
-//    console.log("Testing postvalidate")
-            });
+TrickSchema.post('save', function (model) {
+});
 
-            TrickSchema.pre('save', function(model) {
-//    console.log(model);
-//    console.log("Testing presave");
-            });
+TrickSchema.pre('remove', function (model) {
+});
 
-            TrickSchema.post('save', function(model) {
-//    console.log("Testing postsave");
-            });
+TrickSchema.post('remove', function (model) {
+});
 
-            TrickSchema.pre('remove', function(model) {
-//   console.log("Testing pre remove");
-            });
+TrickSchema.validate('name', function (model, field) {
+    return (model[field]);
+});
 
-            TrickSchema.post('remove', function(model) {
-//    console.log("Testing post remove");
-            });
+TrickSchema.plugin(function (schema) {
+    schema.virtual('hidden', function (model) {
+        return {
+            'name': model.name,
+            'hidden': 'field'
+        };
+    });
+}, {testing: 'options'});
 
-            TrickSchema.validate('name', function(model, field) {
-                return (model[field]);
-            });
+cassie.model('Trick', TrickSchema);
 
-            TrickSchema.plugin(function(schema, options) {
-                schema.virtual('hidden', function(model) {
-                    return {
-                        'name': model.name,
-                        'hidden': 'field'
-                    };
-                });
-            }, {testing: 'options'});
 
-            cassie.model('Trick', TrickSchema);
+describe('Basic', function () {
 
-            cassie.syncTables(connectOptions, function(err, results) {
-                var Trick = cassie.model('Trick');
-                var trick = new Trick({name: 'illusion'});
+    before(function (done) {
+        cassie.syncTables(connectOptions, function (err, results) {
+            done();
+        });
+    });
 
-                trick.save(function(err, results) {
+    after(function (done) {
+        cassie.deleteKeyspace(connectOptions, function (err, results) {
+            cassie.close();
+            done();
+        });
+    });
 
-                    cassie.close();
+    describe("find", function () {
+        it('Should save a trick and find the saved trick.', function (done) {
+
+            var Trick = cassie.model('Trick');
+            var trick = new Trick({name: 'illusion'});
+
+            trick.save(function (err, results) {
+                Trick.find({id: trick.id}, function (err, results) {
+                    assert.equal(results[0].name, trick.name);
+                    assert.equal(results[0].id, trick.id);
                     done();
-
                 });
             });
-
         });
     });
 
-    describe("save", function() {
-        it('should return -1 when the value is not present', function() {
-            assert.equal(-1, [1,2,3].indexOf(4));
+    describe("remove", function () {
+        it('should return -1 when the value is not present', function () {
+            assert.equal(-1, [1, 2, 3].indexOf(4));
         });
     });
 
-    describe("findOne", function() {
-        it('should return -1 when the value is not present', function() {
-            assert.equal(-1, [1,2,3].indexOf(4));
+    describe("findOne", function () {
+        it('should return -1 when the value is not present', function () {
+            assert.equal(-1, [1, 2, 3].indexOf(4));
         });
     });
 
-    describe("update", function() {
-        it('should return -1 when the value is not present', function() {
-            assert.equal(-1, [1,2,3].indexOf(4));
+    describe("update", function () {
+        it('should return -1 when the value is not present', function () {
+            assert.equal(-1, [1, 2, 3].indexOf(4));
         });
     });
 
-    describe("findById", function() {
-        it('should return -1 when the value is not present', function() {
-            assert.equal(-1, [1,2,3].indexOf(4));
+    describe("findById", function () {
+        it('should return -1 when the value is not present', function () {
+            assert.equal(-1, [1, 2, 3].indexOf(4));
         });
     });
 
-    describe("remove", function() {
-        it('should return -1 when the value is not present', function() {
-            assert.equal(-1, [1,2,3].indexOf(4));
+    describe("remove", function () {
+        it('should return -1 when the value is not present', function () {
+            assert.equal(-1, [1, 2, 3].indexOf(4));
         });
     });
 
