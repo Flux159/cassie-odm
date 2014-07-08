@@ -61,25 +61,14 @@ newUser.save(options,function(err) {
 							console.log(err.message);
 							return cassie.close();
 						}
-						// cassie.close();
 					});
-
-					// User.find({user_id: {$in: [1745, 1746, 1744, 1800, 1234]}}, options, function(err, results) {
-					// 	if(err) {
-					// 		console.log(err.message);
-					// 		return cassie.close();
-					// 	}
-					// 	cassie.close();
-					// });
 
 				});
 
 			});
 
-		});		
-		
+		});
 		
 	});
-
 
 });
