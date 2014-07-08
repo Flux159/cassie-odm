@@ -165,7 +165,7 @@ How to batch queries together (fewer network roundtrips).
 
 Examples
 ----------
-Write additional examples here.
+Write additional examples here. Execute Prepared, Streaming each row, Streaming each field, stream
 
 Mongoose API Differences
 ----------
@@ -182,6 +182,14 @@ Write some notes on how to properly model data in Cassandra.
 Session Storage
 ----------
 See [cassie-store](http://github.com/Flux159/cassie-store) for an express compatible session store. Also has notes on how to manually create a session store.
+
+Not yet supported
+----------
+
+Hinting - node-cassandra-cql supports hinting (if you want to use it, use the connection provided or cassie.cql)
+Input Streaming
+Paging - need to support some form of client side paging
+SSL Connections
 
 Testing & Development
 ----------
