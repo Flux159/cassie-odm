@@ -45,7 +45,7 @@ Modeling is the process of defining your Schemas. Although Cassandra is a NoSQL 
     var cassie = require('cassie-odm'); //Require cassie module
     var connection = cassie.connect({keyspace: "mykeyspace", hosts: ["127.0.0.1:9042"]}); //Connect to local cassandra server
     
-    //Creates a User Schema
+    //User Schema
     var UserSchema = new Schema({
         username: String,
         email: {type: String, required: true},
@@ -62,7 +62,7 @@ Modeling is the process of defining your Schemas. Although Cassandra is a NoSQL 
         console.log("A new user signed up!");
     });
     
-    //Creates a Blog Schema
+    //Blog Schema
     var BlogSchema = new Schema({title: {type: String, required: true}, content: String, author: String});
     
     //Registers the schemas with cassie
@@ -107,7 +107,7 @@ Modeling is the process of defining your Schemas. Although Cassandra is a NoSQL 
 
 ```
 
-The above example shows a lot of code, but is relatively simple to understand (particularly if you've used Mongoose). First, we connect to the Cassandra server. Then, we create some schemas with cassie (along with a validator for username and a post-save hook on users). After we register the Schemas with cassie, we sync the tables to make sure that Cassandra knows that they exist (see "Sync" for more information on this and the limitations of syncing). Also note that we haven't provided a primary key in any of our schemas. In general, its good practice to explicitly define a primary key in a NoSQL database (and Cassandra requires it actually). Cassie takes care of this requirement by generating a field called 'id' if we don't specify a primary key. After we call the sync tables function, we can now create users and blogs in our database. First, we create a new user and save it. Then we create a new blog and store the query to be called after we do some other updates. Once we've completed our updates, we gather the queries and send them in a batch to our Cassandra server using the cassie.batch command to create our blog post and update our user. Finally, we close the connection when we're done.
+The above example shows a lot of code, but is relatively simple to understand (particularly if you've used Mongoose). First, we connect to the Cassandra server. Then, we create some schemas with cassie (along with a validator for username and a post-save hook on users). After we register the Schemas with cassie, we sync the tables to make sure that Cassandra knows that they exist (see "Sync" for more information on this and the limitations of syncing). Also note that we haven't provided a primary key in any of our schemas. In general, its good practice to explicitly define a primary key in a NoSQL database (and Cassandra requires it actually). Cassie takes care of this requirement by generating a field called 'id' if we don't specify a primary key. After we call the sync tables function, we can now create users and blogs in our database. First, we create a new user and save it. Then we create a new blog and store the query to be called with some other updates. Once we've done our updates locally, we gather the queries and send them in a batch to our Cassandra server using the cassie.batch command to create our blog post and update our user. Finally, we close the connection when we're done.
 
 Some things to note about the above example:
     First, never store a password in plain text, ideally, you would use the crypto module to generate a hash of the user's password and store that in your database. Second, this data model is not very efficient for a number of reasons that would make more sense if you read through the "Data Modeling Notes" and Cassandra's documentation / architecture (not posting here for brevity).
