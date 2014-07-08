@@ -155,6 +155,10 @@ var Trick = cassie.model('Trick');
 var trick = new Trick({name: 'illusion'});
 var badTrick = new Trick({});
 
+var trick1 = new Trick({name: 'first'});
+var trick2 = new Trick({name: 'second'});
+var trick3 = new Trick({name: 'third'});
+
 //Before using anywhere, check if keyspace exists & sync tables
 
 cassie.syncTables(config.cassandra.options, {debug: true, prettyDebug: true, warning: true}, function(err, results) {
@@ -167,19 +171,27 @@ cassie.syncTables(config.cassandra.options, {debug: true, prettyDebug: true, war
 
         badTrick.save({debug: true}, function(err, results) {
 
+            var query1 = trick1.save();
+            var query2 = trick2.save();
+            var query3 = trick3.save();
 
-            trick.remove({debug: true}, function(err, results) {
+            cassie.batch([query1, query2, query3], {debug: true}, function(err, results) {
+                console.log("Completed Batch");
+                console.log(err);
+                console.log(results);
 
-                var User = cassie.model('User');
+                trick.remove({debug: true}, function(err, results) {
 
-                cassie.close(function() {
-                    console.log("Closed connection.");
+                    var User = cassie.model('User');
+
+                    cassie.close(function() {
+                        console.log("Closed connection.");
+                    });
                 });
+
             });
 
         });
-
-
 
     });
 	
