@@ -32,28 +32,28 @@ cassie.model('Illusion', IllusionSchema);
 var TrickSchema = new Schema({'name': {type: String}});
 
 TrickSchema.post('init', function(model) {
-    console.log("Testing post init");
+//    console.log("Testing post init");
 });
 
 TrickSchema.post('validate', function(model) {
-    console.log("Testing postvalidate")
+//    console.log("Testing postvalidate")
 });
 
 TrickSchema.pre('save', function(model) {
-    console.log(model);
-    console.log("Testing presave");
+//    console.log(model);
+//    console.log("Testing presave");
 });
 
 TrickSchema.post('save', function(model) {
-    console.log("Testing postsave");
+//    console.log("Testing postsave");
 });
 
 TrickSchema.pre('remove', function(model) {
-   console.log("Testing pre remove");
+//   console.log("Testing pre remove");
 });
 
 TrickSchema.post('remove', function(model) {
-    console.log("Testing post remove");
+//    console.log("Testing post remove");
 });
 
 TrickSchema.validate('name', function(model, field) {
@@ -83,9 +83,9 @@ var trick3 = new Trick({name: 'third'});
 
 cassie.syncTables(config.cassandra.options, {debug: true, prettyDebug: true, warning: true}, function(err, results) {
 
-    trick.save({debug: true}, function(err, results) {
+    trick.save({debug: true, prettyDebug: true}, function(err, results) {
 
-        badTrick.save({debug: true}, function(err, results) {
+        badTrick.save({debug: true, prettyDebug: true}, function(err, results) {
 
             var query1 = trick1.save();
             var query2 = trick2.save();

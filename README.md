@@ -173,7 +173,11 @@ API differences between Cassie and Mongoose.
 
 Common Issues using Cassandra
 ----------
-Write some common differences between CQL and RDBMs (SQL). What is not supported by CQL.
+Write some common differences between CQL and RDBMs (SQL). What is not supported by CQL. Write some differences between Cassandra and MongoDB.
+
+Why Cassandra
+----------
+Why would you want to use Cassandra with all those limitations? Distributed, fault tolerant design (kind of like auto-sharded, auto-replicated, master-master). Designed so that if any one node goes down, you can create another node, attach it to the cluster, and retrieve the "lost" data without any downtime. Linearly scalable reads and writes (and storage), when you need more reads/sec or writes/sec, you can simply add another node to the cluster. Finally, with Cassie, relatively easy data modeling in nodejs that compares to the ease of use of MongoDB using Mongoose (once you understand some data modeling differences).
 
 Data Modelling Notes
 ----------
@@ -186,10 +190,18 @@ See [cassie-store](http://github.com/Flux159/cassie-store) for an express compat
 Not yet supported
 ----------
 
-Hinting - node-cassandra-cql supports hinting (if you want to use it, use the connection provided or cassie.cql)
-Input Streaming
-Paging - need to support some form of client side paging
-SSL Connections
+Cassie Side:
+* Hinting - node-cassandra-cql supports hinting (if you want to use it, use the connection provided or cassie.cql)
+* Paging - need to support some form of client side paging for common use case (I'm thinking primary key timestamp based?)
+* Default - when adding a column, specify default value (in schema / sync)
+* Optional - specify table name when creating (in schema options - should automatically sync to use that tableName)
+
+Driver Side:
+* Input Streaming - not supported by node-cassandra-cql yet
+* SSL Connections - not supported by node-cassandra-cql yet
+* Auto determine other hosts - not supported by node-cassandra-cql yet
+* "Smart connections" - Only send CQL request to the hosts that contain the data (requires knowing about how the data is sharded)
+* Possibly switch to officially supported native C/C++ driver when out of beta (would need to test performance and wrap in javascript) - https://github.com/datastax/cpp-driver
 
 Testing & Development
 ----------
