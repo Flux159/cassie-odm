@@ -91,7 +91,7 @@ cassie.syncTables(config.cassandra.options, {debug: true, prettyDebug: true, war
             var query2 = trick2.save();
             var query3 = trick3.save();
 
-            cassie.batch([query1, query2, query3], {debug: true, prettyDebug: true}, function(err, results) {
+            cassie.batch([query1, query2, query3], {debug: true, prettyDebug: true, timing: true}, function(err, results) {
 
                 trick.remove({debug: true, prettyDebug: true}, function(err, results) {
 
