@@ -1,6 +1,6 @@
 Cassie
 =====
-Cassie is a model layer and CQL generator that uses the [node-cassandra-cql](https://github.com/jorgebay/node-cassandra-cql) project and attempts to mimic most of mongoose's API to allow for easy switching between MongoDB and Cassandra. Note that Cassie-ODM is not currently a full 1:1 mapping to mongoose's API (and probably will never be due to certain architectural differences between Cassandra and MongoDB's query languages).
+Cassie is a model layer and CQL generator that uses the [node-cassandra-cql](https://github.com/jorgebay/node-cassandra-cql) project and attempts to mimic most of mongoose's API to allow for easy switching between MongoDB and Cassandra. Note that Cassie-ODM is not currently a full 1:1 mapping to mongoose's API (and probably will never be due to certain architectural differences between Cassandra and MongoDB).
 
 Getting Started
 ----------
@@ -187,7 +187,7 @@ Session Storage
 ----------
 See [cassie-store](http://github.com/Flux159/cassie-store) for an express compatible session store. Also has notes on how to manually create a session store.
 
-Not yet supported
+Not yet supported (on roadmap)
 ----------
 
 Cassie Side:
@@ -195,6 +195,7 @@ Cassie Side:
 * Paging - need to support some form of client side paging for common use case (I'm thinking primary key timestamp based?)
 * Default - when adding a column, specify default value (in schema / sync)
 * Optional - specify table name when creating (in schema options - should automatically sync to use that tableName)
+* Collections - and collection modifications (UPDATE collection in single query with IN clause)
 
 Driver Side:
 * Input Streaming - not supported by node-cassandra-cql yet
