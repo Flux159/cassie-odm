@@ -123,6 +123,14 @@ TrickSchema.post('save', function(model) {
     console.log("Testing postsave");
 });
 
+TrickSchema.pre('remove', function(model) {
+   console.log("Testing pre remove");
+});
+
+TrickSchema.post('remove', function(model) {
+    console.log("Testing post remove");
+});
+
 cassie.model('Trick', TrickSchema);
 
 var Trick = cassie.model('Trick');
@@ -138,11 +146,15 @@ cassie.syncTables(config.cassandra.options, {debug: true, prettyDebug: true, war
     trick.save({debug: true}, function(err, results) {
         console.log("Saved trick");
 
-        var User = cassie.model('User');
+        trick.remove({debug: true}, function(err, results) {
 
-        cassie.close(function() {
-            console.log("Closed connection.");
+            var User = cassie.model('User');
+
+            cassie.close(function() {
+                console.log("Closed connection.");
+            });
         });
+
     });
 	
 });
