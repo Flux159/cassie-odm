@@ -314,19 +314,80 @@ The examples below show how a primary key can be explicitly defined on a field, 
 
 Secondary Indexing
 ----------
-Write index stuff.
+Cassie supports secondary indexes on fields with the following option {index: true}. See the example below:
+
+    //Explicitly defining a primary key and defining a secondary index
+    var DogSchema = new Schema({
+        'dog_id': {type: Number, primary: true},
+        'fname': {type: String, index: true},
+        'lname': String
+    });
 
 Validations
 ----------
-Write validation stuff.
+Validations are a core part of Cassie's Object Data Model. Validations allow you to easily reject inserts and updates across all your models in javascript without ever hitting your database. Cassie comes with internal support for a "required" validation and also allows you to validate any field with a custom function.
+
+    //Requiring 'fname' not be null
+    var DogSchema = new Schema({
+        'dog_id': {type: Number, primary: true},
+        'fname': {type: String, required: true},
+        'lname': String
+    });
+
+    //Adding a custom validation to 'lname'
+    DogSchema.validate('lname', function(model, fieldKey) {
+        return (model[fieldKey] === 'doge');
+    });
+
+    //A validate function is passed the model and the fieldKey to validate. It returns true or false.
+    //The validation function above requires that 'lname' is equal to 'doge' for all models
+
 
 Hooks
 ----------
-Pre, Post hooks for save, remove. Post hooks for init & validate.
+
+Cassie supports pre-save and pre-remove hooks for its models. It also supports post-init, post-validate, post-save, and post-remove hooks. The example below shows all of these being used.
+
+```
+
+    var TrickSchema = new Schema({'name': {type: String, index: true}});
+    
+    TrickSchema.post('init', function (model) {
+        console.log("Initialized Trick");
+    });
+    
+    TrickSchema.post('validate', function (model) {
+        console.log("Validated Trick");
+    });
+    
+    TrickSchema.pre('save', function (model) {
+        console.log("About to save (insert or update) trick to database");
+    });
+    
+    TrickSchema.post('save', function (model) {
+        console.log("Saved Trick to database");
+    });
+    
+    TrickSchema.pre('remove', function (model) {
+        console.log("About to remove trick (or trick fields) from database");
+    });
+    
+    TrickSchema.post('remove', function (model) {
+        console.log("Removed trick (or trick fields) from database");
+    });
+    
+    cassie.model('Trick', TrickSchema);
+
+```
+
+Note that hooks are only called on Cassie Model instances, not when performing Model.update or Model.remove (because those are direct database calls that don't generate any Cassie instances).
 
 Plugins
 ----------
 Models support plugins. Plugins allow you to share schema properties between models and allow for pre-save hooks, validations, indexes, pretty much anything you can do with a Schema.
+
+
+
 
 Lightweight Transactions
 ----------
