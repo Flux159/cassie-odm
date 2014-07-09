@@ -278,7 +278,7 @@ When writing an application, the general idea is that you preload all your schem
 
 Primary Keys
 ----------
-Cassandra requires a primary key for all column families. This means that you would need to define a primary key whenever creating a table. Cassie relaxes that restriction slightly by allowing you to define Schemas without primary keys. However, what Cassie does internally is create an 'id' field on your Schema and adds a pre-save hook to generate an id for all new models (see "Hooks" for how you can do the same). Cassie then marks this 'id' field as your primary key. This is important to note because primary keys cannot be modified using an ALTER TABLE command. In Cassandra, once your primary key has been set for a table, you're not allowed to modify it. If you want sophisticated primary keys (like composite primary keys), you need to design your Data Model appropriately from the beginning and make sure that you define it correctly in your Schema.
+Cassandra requires a primary key for all column families. This means that you would need to define a primary key whenever creating a table. Cassie relaxes that restriction slightly by allowing you to define Schemas without primary keys. However, what Cassie does internally is create an 'id' field on your Schema and adds a pre-save hook to generate an id for all new models (see "Hooks" for how you can do the same with your own fields). Cassie then marks this 'id' field as your primary key. This is important to note because primary keys cannot be modified using an ALTER TABLE command. In Cassandra, once your primary key has been set for a table, you're not allowed to modify it. If you want sophisticated primary keys (like composite primary keys), you need to design your Data Model appropriately from the beginning and make sure that you define it correctly in your Schema.
  
  See "Data Modeling" notes for more information on designing appropriate models for common use cases. Take particular note of how composite primary keys can be used for quick advanced queries.
 
@@ -342,7 +342,7 @@ Validations
 ----------
 Validations are a core part of Cassie's Object Data Model. Validations allow you to easily reject inserts and updates across all your models in javascript without ever hitting your database. Cassie comes with internal support for a "required" validation and also allows you to validate any field with a custom function.
 
-    //Requiring 'fname' not be null
+    //Requiring that 'fname' is provided (is not null)
     var DogSchema = new Schema({
         'dog_id': {type: Number, primary: true},
         'fname': {type: String, required: true},
