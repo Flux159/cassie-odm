@@ -1,6 +1,16 @@
 Cassie
 =====
-Cassie is a model layer and CQL generator that uses the [node-cassandra-cql](https://github.com/jorgebay/node-cassandra-cql) project and attempts to mimic most of mongoose's API to allow for easy switching between MongoDB and Cassandra. Note that Cassie-ODM is not currently a full 1:1 mapping to mongoose's API (and probably will never be due to certain architectural differences between Cassandra and MongoDB).
+Cassie is a model layer and CQL generator written in javascript that uses the [node-cassandra-cql](https://github.com/jorgebay/node-cassandra-cql) project and attempts to mimic most of mongoose's API to allow for easy switching between MongoDB and Cassandra. Note that Cassie-ODM is not currently a full 1:1 mapping to mongoose's API (and probably will never be due to certain architectural differences between Cassandra and MongoDB).
+
+Installing
+----------
+If you have nodejs installed, just run the following in your project's directory:
+
+```
+    npm install cassie-odm
+```
+
+Also note that to use any of the examples below, it is assumed that you have Cassandra downloaded and running on the default port of 9042. Check out Cassie's [Cassandra Installation Guide](http://wiki) for how to get Cassandra for your system (specifically brew on OSX, apt-get/yum on linux, or via an installer for Windows). Alternatively see the [Apache Cassandra Download](http://cassandra.apache.org/download/) page.
 
 Getting Started
 ----------
@@ -104,6 +114,8 @@ Modeling is the process of defining your Schemas. Although Cassandra is a NoSQL 
 ```
 
 The above example shows a lot of code, but is relatively simple to understand (particularly if you've used Mongoose). First, we connect to the Cassandra server. Then, we create some schemas with cassie (along with a validator for username and a post-save hook on users). After we register the Schemas with cassie, we sync the tables to make sure that Cassandra knows that they exist (see "Sync" for more information on this and the limitations of syncing). Also note that we haven't provided a primary key in any of our schemas. In general, its good practice to explicitly define a primary key in a NoSQL database (and Cassandra requires it actually). Cassie takes care of this requirement by generating a field called 'id' if we don't specify a primary key. After we call the sync tables function, we can now create users and blogs in our database. First, we create a new user and save it. Then we create a new blog and store the query to be called with some other updates. Once we've done our updates locally, we gather the queries and send them in a batch to our Cassandra server using the cassie.batch command to create our blog post and update our user. Finally, we close the connection when we're done.
+
+NOTE: All fields and should be lowercase. This is due to Cassandra's columns being lowercase (and currently Cassie doesn't automatically covert these for you in JS).
 
 Some things to note about the above example:
     First, all fields inside of models must be lowercase. This is because when creating fields in Cassandra through CQL, fields are stored without any uppercase letters. Second, never store a password in plain text, ideally, you would use the crypto module to generate a hash of the user's password and store that in your database. Finally, this data model is not very efficient for a number of reasons that would make more sense if you read through the "Data Modeling Notes" and Cassandra's documentation / architecture (not posting here for brevity).
@@ -406,39 +418,138 @@ Models support plugins. Plugins allow you to share schema properties between mod
 
     //user.js
     var updatedAtPlugin = require('./updatedAtPlugin);
-    var User = new Schema({ ... });
-    User.plugin(updatedAtPlugin, {index: true});
+    var UserSchema = new Schema({ ... });
+    UserSchema.plugin(updatedAtPlugin, {index: true});
 
     //blog.js
     var updatedAtPlugin = require('./updatedAtPlugin);
-    var Blog = new Schema({ ... });
-    Blog.plugin(updatedAtPlugin, {index: true});
+    var BlogSchema = new Schema({ ... });
+    BlogSchema.plugin(updatedAtPlugin, {index: true});
 
 ```
 
 Lightweight Transactions
 ----------
-IF NOT EXISTS option when creating queries. Note that IF field = value is not currently supported for updates.
+
+Cassie supports lightweight transactions for saving data via the {if_not_exists: Boolean} option.
+
+Note that currently, the IF field = value clause is not supported for updates (on roadmap).
+
+```
+
+    var User = cassie.model('User');
+    
+    //Assumption is that user_id is primary key
+    var new_user = new User({user_id: 2000, name: 'steve'});
+    
+    new_user.save({if_not_exists: true}, function(err) {
+        //Handle errors, etc.
+    });
+
+```
+
 
 Time to Live (TTL)
 ----------
-TTL option when inserting data.
+Cassie supports specifying a TTL when inserting data via the {ttl: Number} option, where Number is the time in seconds.
 
-Limit & Sort
+```
+
+    var Post = cassie.model('Post');
+    
+    var new_post = new Post({title: 'My time limited post'});
+
+    new_post.save({ttl: 86400}, function(err) {
+        //Handle errors, etc.
+    });
+
+```
+
+Limit
 ----------
-Limit & Sort options
+Cassie can limit your queries based on options or by chaining queries. See the examples below:
+
+```
+
+    var User = cassie.model('User');
+    
+    User.find({}, {limit: 10, sort: {name: 1}}, function(err, users) {
+        console.log(users.toString());
+    });
+    
+    //Same query as above using chaining
+    User.find({}).limit(10).sort({name: 1}).exec(function(err, users) {
+        console.log(users.toString());
+    });
+    
+
+```
 
 Batching
 ----------
-How to batch queries together (fewer network roundtrips).
+Cassie can batch queries together to run at once. This is done by not specifying a callback to an insert or delete function and passing an array of queries to cassie.batch(). See the example below:
 
-Examples
+```
+
+    var User = cassie.model('User');
+    var new_user_1 = new User({name: 'Bob'});
+    var new_user_2 = new User({name: 'Steve'});
+    
+    var query_1 = new_user_1.save();
+    var query_2 = new_user_2.save();
+    
+    var batchOptions = {debug: true, prettyDebug: true, timing: true};
+    cassie.batch([query1, query2], batchOptions, function(err) {
+        //Handle errors, etc.
+    });
+    
+
+```
+
+Execute Prepared
 ----------
-Write additional examples here. Execute Prepared, Stream
+Cassie can execute prepared queries by passing in a "prepared" option when calling exec (either through a callback or through Query.exec() directly). See the examples below:
 
-Pagination Example
+```
 
-Common schemas / Data models in Cassandra
+    var User = cassie.model('User');
+    
+    User.find({id: {$in: [1000, 1001, 1002, 1003]}}, {prepared: true}, function(err, users) {
+        //Handle errors, do stuff w/ results
+    });
+    
+    //This is equivalent to the above
+    var query = User.find({id: {$in: [1000, 1001, 1002, 1003]}});
+    query.exec({prepared: true}, function(err, users) {
+        //Handle errors, do stuff w/ results
+    });
+
+```
+
+Streaming
+----------
+Cassie supports streaming results via a Query.stream(options, callback) method. This returns a node-cassandra-cql stream (can view documentation for that as well). See the example below:
+
+```
+
+    var User = cassie.model('User');
+    
+    var query = User.find({id: {$in: [1000, 1001, 1002, 1003]}});
+    query.stream()
+        .on('readable', function() {
+            var row;
+            while(row = this.read()) {
+                console.log(row);
+            }
+        })
+        .on('end', function() {
+            //Stream ended
+        })
+        .on('error', function() {
+            //Stream error
+        });
+
+```
 
 Client Connections and raw queries
 ----------
@@ -464,13 +575,25 @@ Why Cassandra
 ----------
 Why would you want to use Cassandra with those limitations? Cassandra provides a truly distributed, fault tolerant design (kind of like auto-sharded, auto-replicated, master-master). Cassandra is designed so that if any one node goes down, you can create another node, attach it to the cluster, and retrieve the "lost" data without any downtime. Cassandra provides linearly scalable reads and writes based on the number of nodes in a cluster. In other words, when you need more reads/sec or writes/sec, you can simply add another node to the cluster. Finally, with Cassie, you get relatively easy data modeling in nodejs that compares to the ease of use of MongoDB using Mongoose (once you understand some data modeling differences).
 
+When to use Cassandra
+----------
+
+With all that being said, there are some use cases where it would be easier to use MongoDB or MySQL / PostgreSQL as opposed to Cassandra. 
+
 Data Modelling Notes
 ----------
 Write some notes on how to properly model data in Cassandra.
 
+Common Examples
+----------
+
+Pagination Example
+
+Common schemas / Data models in Cassandra
+
 Session Storage
 ----------
-See [cassie-store](http://github.com/Flux159/cassie-store) for an express compatible session store. Also has notes on how to manually create a session store.
+See [cassie-store](http://github.com/Flux159/cassie-store) for an express compatible session store. Also has notes on how to manually create a session store using cassie.
 
 Not yet supported (on roadmap)
 ----------
@@ -482,6 +605,7 @@ Cassie Side:
 * Optional - specify table name when creating (in schema options - should automatically sync to use that tableName)
 * Additional Lightweight Transactions - specifically IF field = value (currently only supports IF NOT EXISTS clause)
 * Collections - collection modifications (UPDATE/REMOVE collection in single query with IN clause)
+* Queries loaded from external CQL files
 * Counters are not supported by Cassie
 * Stream rows - node-cassandra-cql supports it, but it was failing in Cassie's tests, so its not included
 * Change type of defined columns - should be possible, but need a translation layer between Cassandra's Java Marshaller classes and Cassie types
