@@ -2,11 +2,11 @@ var assert = require('assert');
 
 describe('Getting Started', function() {
 
-    it('should not fail', function () {
+    it('should not fail', function (done) {
 
 //            var cassie = require('cassie-odm'); //One change from the README
         var cassie = require('../../lib/cassie');
-        var config = {keyspace: "CassieTestGettingStarted", hosts: ["127.0.0.1:9042"]};
+        var config = {keyspace: "CassieTest", hosts: ["127.0.0.1:9042"]};
         cassie.connect(config);
 
         var CatSchema = new cassie.Schema({name: String});
@@ -17,11 +17,10 @@ describe('Getting Started', function() {
             var kitty = new Cat({ name: 'Eevee'});
             kitty.save(function (err) {
                 if (err) return console.log(err);
-                console.log("meow");
+//                console.log("meow"); //Commenting out from readme
 
-                cassie.deleteKeyspace(config, function() { //Another change from readme (to keep tests clean)
-                    cassie.close();
-                });
+                cassie.close();
+                done();
 
             });
 

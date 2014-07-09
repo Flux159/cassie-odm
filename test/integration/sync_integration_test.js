@@ -14,29 +14,8 @@ describe('Sync', function () {
         });
     });
 
-//    describe("Sync Tables", function () {
-//
-//        it('Should Create a table', function (done) {
-//
-//            var CatSchema = new cassie.Schema({name: String});
-//            var Cat = cassie.model('Cat', CatSchema);
-//
-//            cassie.syncTables(config, function () {
-//
-//                done();
-//
-//            });
-//
-//        });
-//
-//    });
-
-
     describe("updateTables", function () {
         it('Should create and update an existing table', function (done) {
-
-//            delete cassie;
-//            cassie = require('../../lib/cassie');
 
             var CatSchema = new cassie.Schema({name: String});
             var Cat = cassie.model('Cat', CatSchema);
@@ -46,33 +25,15 @@ describe('Sync', function () {
 
             cassie.syncTables(config, options, function () {
 
-                setTimeout(function() {
+                var newCatSchema = new cassie.Schema({name: String, breed: String});
+                var Cat = cassie.model('Cat', newCatSchema);
 
-                    var newCatSchema = new cassie.Schema({name: String, breed: String});
-                    var Cat = cassie.model('Cat', newCatSchema);
-
-                    cassie.syncTables(config, options, function() {
-                        done();
-                    });
-
-                }, 100);
+                cassie.syncTables(config, options, function () {
+                    done();
+                });
 
             });
         });
     });
-
-
-
-//    describe("deleteKeyspace", function () {
-//        it('Should delete the keyspace', function (done) {
-//
-//            cassie.deleteKeyspace(config, function () { //Another change from readme (to keep tests clean)
-//                cassie.close();
-//
-//                done();
-//            });
-//
-//        });
-//    })
 
 });

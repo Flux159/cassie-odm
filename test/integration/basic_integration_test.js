@@ -45,16 +45,19 @@ var ids = [];
 
 after(function (done) {
     cassie.deleteKeyspace(connectOptions, function (err, results) {
-        cassie.close();
-        done();
+        cassie.close(function() {
+            cassie.closeAll(function() {
+                done();
+            });
+        });
     });
 });
 
 describe('Basic', function () {
 
     before(function (done) {
-//        var options = {};
-        var options = {debug: true, prettyDebug: true};
+        var options = {};
+//        var options = {debug: true, prettyDebug: true};
         cassie.syncTables(connectOptions, options, function (err, results) {
             done();
         });

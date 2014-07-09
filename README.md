@@ -33,75 +33,80 @@ Modeling is the process of defining your Schemas. Although Cassandra is a NoSQL 
 
 ```
 
-    var cassie = require('cassie-odm'); //Require cassie module
-    var connection = cassie.connect({keyspace: "CassieTest", hosts: ["127.0.0.1:9042"]}); //Connect to local cassandra server
-    
+    var cassie = require('cassie-odm'),
+        Schema = cassie.Schema; //Require cassie module
+
+    var config = {keyspace: "CassieTest", hosts: ["127.0.0.1:9042"]};
+    cassie.connect(config); //Connect to local cassandra server
+
     //User Schema
     var UserSchema = new Schema({
         username: String,
         email: {type: String, required: true},
-        hashedPassword: {type: String, required: true},
-        blogs: []});
-    
+        hashed_password: {type: String, required: true},
+        blogs: [cassie.types.uuid]});
+
     //Adds a validator for username
-    UserSchema.validate('username', function(user) {
+    UserSchema.validate('username', function (user) {
         return (user.username !== null);
     });
-    
+
     //Add a post-save hook
-    UserSchema.post('save', function(model) {
+    UserSchema.post('save', function (model) {
         console.log("A new user signed up!");
     });
-    
+
     //Blog Schema
     var BlogSchema = new Schema({title: {type: String, required: true}, content: String, author: String});
-    
+
     //Registers the schemas with cassie
     var User = cassie.model('User', UserSchema);
     var Blog = cassie.model('Blog', BlogSchema);
-    
+
     //Sync the schemas with Cassandra to ensure that they exist and contain the appropriate fields (see additional notes on the limitations of syncing)
-    var syncOptions = {debug: true, prettyDebug:true, warning: true};
-    cassie.syncTables(config.cassandra.options, syncOptions, function(err, results) {
-    
+    var syncOptions = {debug: true, prettyDebug: true, warning: true};
+    cassie.syncTables(config, syncOptions, function (err, results) {
+        console.log(err);
+
         //Creates a new user
-        var newUser = new User({username: 'ManBearPig', email: 'AlGore@gmail.com', hashedPassword: 'Never-do-this-use-crypto-module'});
-    
+        var newUser = new User({username: 'ManBearPig', email: 'AlGore@gmail.com', hashed_password: 'Never-do-this-use-crypto-module'});
+
         //Asynchronous function that returns to provided callback
-        newUser.save(function(err, results) {
-            if(err) console.log(err);
-            
+        newUser.save({debug: true, prettyDebug: true}, function (err, results) {
+            if (err) console.log(err);
+
             //Creates a new blog
-            var newBlog = new Blog({title: 'Global warming and Manbearpig', content: 'Half-man, half-bear, half-pig...', author: new_user.username});
-        
+            var newBlog = new Blog({title: 'Global warming and Manbearpig', content: 'Half-man, half-bear, half-pig...', author: newUser.username});
+
             //.save() without a callback returns a Query object. Here we batch together multiple queries to execute them together
             var firstQuery = newBlog.save();
-            
+
             //Note that for types other than arrays and maps, cassie tracks changes for saving, however, since blogs is an array, we need to mark it as modified
             //Also note that after running .save(), newBlog has a generated field called 'id'. This only occurs if cassie created the primary key for us (see "Primary Keys" for more info).
             newUser.blogs.push(newBlog.id);
             newUser.markModified('blogs');
-            
+
             //Get second query to batch
             var secondQuery = newUser.save();
-        
+
             //Run batch cql commands
-            cassie.batch([firstQuery, secondQuery], {consistency: cassie.consistencies.quorum}, function(err, results) {
-                if(err) console.log(err);
-                
+            cassie.batch([firstQuery, secondQuery], {consistency: cassie.consistencies.quorum, debug: true, prettyDebug: true}, function (err, results) {
+                if (err) console.log(err);
+
                 //Close the connection since we're done
                 cassie.close();
             });
         });
-    
+
     });
+
 
 ```
 
 The above example shows a lot of code, but is relatively simple to understand (particularly if you've used Mongoose). First, we connect to the Cassandra server. Then, we create some schemas with cassie (along with a validator for username and a post-save hook on users). After we register the Schemas with cassie, we sync the tables to make sure that Cassandra knows that they exist (see "Sync" for more information on this and the limitations of syncing). Also note that we haven't provided a primary key in any of our schemas. In general, its good practice to explicitly define a primary key in a NoSQL database (and Cassandra requires it actually). Cassie takes care of this requirement by generating a field called 'id' if we don't specify a primary key. After we call the sync tables function, we can now create users and blogs in our database. First, we create a new user and save it. Then we create a new blog and store the query to be called with some other updates. Once we've done our updates locally, we gather the queries and send them in a batch to our Cassandra server using the cassie.batch command to create our blog post and update our user. Finally, we close the connection when we're done.
 
 Some things to note about the above example:
-    First, never store a password in plain text, ideally, you would use the crypto module to generate a hash of the user's password and store that in your database. Second, this data model is not very efficient for a number of reasons that would make more sense if you read through the "Data Modeling Notes" and Cassandra's documentation / architecture (not posting here for brevity).
+    First, all fields inside of models must be lowercase. This is because when creating fields in Cassandra through CQL, fields are stored without any uppercase letters. Second, never store a password in plain text, ideally, you would use the crypto module to generate a hash of the user's password and store that in your database. Finally, this data model is not very efficient for a number of reasons that would make more sense if you read through the "Data Modeling Notes" and Cassandra's documentation / architecture (not posting here for brevity).
 
 Queries
 ----------
@@ -122,6 +127,10 @@ INSERT and UPDATE queries. Also write information on _is_dirty flag used for upd
 Removing
 ----------
 DELETE query. 
+
+Types
+----------
+Cassie supports the following types. Note that arrays and Maps must have defined types. Consider using a Buffer if you want to store 
 
 Sync
 ----------
@@ -204,6 +213,8 @@ Cassie Side:
 * Default - when adding a column, specify default value (in schema / sync)
 * Optional - specify table name when creating (in schema options - should automatically sync to use that tableName)
 * Collections - collection modifications (UPDATE/REMOVE collection in single query with IN clause)
+* Stream rows - node-cassandra-cql supports it, but it was failing in Cassie's tests, so its not included
+* Not on roadmap: Connecting to multiple keyspaces (ie multi-tenancy with one app) - Can currently use a new connection and manually run CQL, but can't sync over multiple keyspaces because schemas and models are tied to a single cassie instance. Current way to deal with this is to use a separate server process (ie a different express/nodejs server process) and don't do multitenancy over multiple keyspaces in the same server process.
 
 Driver Side:
 * Input Streaming - not supported by node-cassandra-cql yet
@@ -224,9 +235,9 @@ Clone the repository and run the following from command line:
 
 ```
 
-Note: 'npm test' creates a keyspace "CassieODMTest" on your local Cassandra server then deletes it when done.
+Note: 'npm test' creates a keyspace "CassieTest" on your local Cassandra server then deletes it when done.
 
-Get code coverage reports by running 'npm run test-coverage'.
+Get code coverage reports by running 'npm run test-coverage' (coverage reports will go into /coverage directory).
 
 Submit pull requests for any bug fixes!
 
