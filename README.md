@@ -300,31 +300,23 @@ The examples below show how a primary key can be explicitly defined on a field, 
         'fname': String,
         'lname': String
     });
-
-```
-
-```
-
+    
     //Explicitly defining a composite primary key
-    var DogSchema = new Schema({
+    var DogeSchema = new Schema({
         'dog_id': {type: Number},
         'fname': String,
         'lname': String
-    }, {primary: ['user_id', 'fname']});
-
+    }, {primary: ['dog_id', 'fname']});
+    
     //Explicitly defining a composite primary key
-    var DogSchema = new Schema({
+    var DawgSchema = new Schema({
         'dog_id': {type: Number},
         'fname': String,
         'lname': String
-    }, {primary: [['user_id','fname'], 'lname']});
-
-```
-
-```
-
+    }, {primary: [['dog_id','fname'], 'lname']});
+    
     //Cassie defines 'id' field for you - Note that in this case 'dog_id' is NOT the primary key, 'id' is (and 'id' is a uuid v4 type)
-    var DogSchema = new Schema({
+    var DagSchema = new Schema({
         'dog_id': {type: Number, default: 'uuid'},
         'fname': String,
         'lname': String

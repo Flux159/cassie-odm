@@ -1,5 +1,3 @@
-
-
 var assert = require('assert');
 
 var cassie = require('../lib/cassie'),
@@ -37,13 +35,8 @@ var DagSchema = new Schema({
 });
 
 cassie.model('Dog', DogSchema);
-
-var Doge = cassie.model('Doge', DogeSchema);
-var Dawg = cassie.model('Dawg', DawgSchema);
-
-console.log(Doge);
-console.log(Dawg);
-
+cassie.model('Doge', DogeSchema);
+cassie.model('Dawg', DawgSchema);
 cassie.model('Dag', DagSchema);
 
 var options = {debug:true, prettyDebug: true};
