@@ -3,8 +3,6 @@ var assert = require('assert');
 var cassie = require('../../lib/cassie'),
     Schema = cassie.Schema;
 
-//var config = {hosts: ['127.0.0.1'], keyspace: 'mykeyspace'};
-
 var connectOptions = {hosts: ["127.0.0.1:9042"], keyspace: "CassieTest"};
 
 cassie.connect(connectOptions);
@@ -23,7 +21,6 @@ describe('Crud', function () {
 
     before(function (done) {
         var options = {};
-//        var options = {debug: true, prettyDebug: true};
         cassie.syncTables(connectOptions, options, function (err, results) {
             done();
         });
@@ -62,7 +59,6 @@ describe('Crud', function () {
                                 assert(users[0].fname === 'Dole');
                                 assert(users[0].lname === 'bob');
 
-//                                cassie.close();
                                 done();
 
                             });

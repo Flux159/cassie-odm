@@ -193,7 +193,7 @@ Cassie supports the following types. Note that arrays and Maps must have defined
 
 String
 Number (can specify Int by using cassie.types.Int, Double by cassie.types.Double, or Long by cassie.types.Long) - default is Int if you use Number
-Date
+Date (a timestamp)
 ObjectId (specified by cassie.types.ObjectId or cassie.types.uuid) - this is a uuid v4
 Buffer (Cassandra stores as blobs)
 Arrays (must specify internal type, like: [String])
