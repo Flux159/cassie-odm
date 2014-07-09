@@ -121,7 +121,7 @@ Create Example (INSERT):
 ```
 
     //Create Example (assuming schemas have been defined and sync'ed - see sync for more information)
-    var Cat = cassie.model('Cat', CatSchema);
+    var Cat = cassie.model('Cat');
 
     var kitten = new Cat({name: 'eevee'});
     kitten.save(function(err) {
@@ -135,10 +135,11 @@ Read Example (SELECT):
 ```
 
     //Read Example (assuming schemas have been defined & sync'ed - see sync for more information)
-    var Cat = cassie.model('Cat', CatSchema);
+    var Cat = cassie.model('Cat');
     
     Cat.find({id: {$in: [1234, 1235, 1236]}).exec(function(err, cats) {
         console.log(cats.toString());
+        var cat1 = cats[0]; //...
     });
 
 ```
@@ -151,7 +152,7 @@ Note: Cassie internally stores a flag to know when you've modified fields - for 
     //Update Example (assuming schemas have been defined & sync'ed - see sync for more information)
 
     //Create Example (assuming schemas have been defined and sync'ed - see sync for more information)
-    var Cat = cassie.model('Cat', CatSchema);
+    var Cat = cassie.model('Cat');
 
     var kitten = new Cat({name: 'eevee'});
     kitten.save(function(err) {
@@ -164,6 +165,14 @@ Note: Cassie internally stores a flag to know when you've modified fields - for 
         });
     });
 
+    //Alternatively, you can also send update queries if you know some information about the model
+    
+    var Cat = cassie.model('Cat');
+    
+    Cat.remove({id: 2000}, {name: 'bambie'}, function(err) {
+        //Cat with id 2000 has had its name updated
+    });
+
 
 ```
 
@@ -173,7 +182,7 @@ Delete Example (DELETE):
 
     //Delete Example (assuming schemas have been defined & sync'ed - see sync for more information)
     
-    var Cat = cassie.model('Cat', CatSchema);
+    var Cat = cassie.model('Cat');
     
     var kitten = new Cat({name: 'eevee'});
     kitten.save(function(err) {
@@ -183,6 +192,13 @@ Delete Example (DELETE):
         });
     });
     
+    //Alternatively, you can also send delete queries if you know some information about the model (that Cassandra indexes by)
+    
+    var Cat = cassie.model('Cat');
+    
+    Cat.remove({id: 2000}, 'name', function(err) {
+        //Cat with id 2000 has had its name deleted
+    });
 
 ```
 
@@ -201,7 +217,45 @@ Maps (must specify internal types, like {String: String} - arbitrary maps are no
 
 Sync
 ----------
-Write Sync stuff.
+
+Syncing is the process of creating keyspaces (similar to a database in traditional RDBMs) and column families (similar to tables) from your schemas. Cassie handles the process of syncing via its syncTables function. Sync tables will create a keyspace if it doesn't exist, create column families if they don't exist, and alter column families if you've added fields to your schemas. Syncing also creates a primary key with the name of 'id' if you don't specify a different primary key. This allows you to rapidly iterate on modifying your schemas and keep your tables in sync. 
+
+However, syncing has some limitations in its current form. 
+
+Syncing cannot alter column names, so if you decide to change your column name, you would have to use cqlsh (see CQL documentation on ALTER TABLE with the RENAME clause [here](http://www.datastax.com/documentation/cql/3.0/cql/cql_reference/alter_table_r.html). This is because cassie doesn't know what you previously defined a column as (and it has no way of knowing that information).
+
+Cassie cannot change the types of already defined columns. This is currently a limitation of Cassie's sync function and may be added later (see roadmap). 
+
+Cassie also cannot change the primary key for any table after it has been created. This is a limitation of Cassandra.
+
+Finally, Cassie does not delete columns or tables from your database if they aren't defined. You can pass a "warning: true" option to sync tables to tell you which columns are missing from your schemas, but Cassie will not delete the columns for you (to prevent unintended data loss). This is what "syncing forward" implies.
+
+Here is an example of using sync tables to sync two tables to the database with debugging and warning flags enabled:
+
+```
+
+        //User Schema
+        var UserSchema = new Schema({
+            username: String,
+            email: {type: String, required: true},
+            hashed_password: {type: String, required: true},
+            blogs: [cassie.types.uuid]});
+
+        //Blog Schema
+        var BlogSchema = new Schema({title: {type: String, required: true}, content: String, author: String});
+
+        //Registers the schemas with cassie
+        var User = cassie.model('User', UserSchema);
+        var Blog = cassie.model('Blog', BlogSchema);
+        
+        var syncOptions = {debug: true, prettyDebug: true, warning: true};
+        cassie.syncTables(config, syncOptions, function (err) {
+            console.log(err);
+        });
+
+```
+
+When writing an application, the general idea is that you preload all your schemas into cassie, then sync your models once before running your other code (ie before starting an express application or web server). This will give you access to all your models whenever you need them by using the cassie.model('ModelName') function. An example of this process is given in the [wiki](http://wiki).
 
 Primary Keys
 ----------
@@ -286,6 +340,7 @@ Cassie Side:
 * Collections - collection modifications (UPDATE/REMOVE collection in single query with IN clause)
 * Counters are not supported by Cassie
 * Stream rows - node-cassandra-cql supports it, but it was failing in Cassie's tests, so its not included
+* Change type of defined columns - should be possible, but need a translation layer between Cassandra's Java Marshaller classes and Cassie types
 * Not on roadmap: Connecting to multiple keyspaces (ie multi-tenancy with one app) - Can currently use a new connection and manually run CQL, but can't sync over multiple keyspaces because schemas and models are tied to a single cassie instance. Current way to deal with this is to use a separate server process (ie a different express/nodejs server process) and don't do multitenancy over multiple keyspaces in the same server process.
 
 Driver Side:
