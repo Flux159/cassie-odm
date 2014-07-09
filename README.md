@@ -110,27 +110,94 @@ Some things to note about the above example:
 
 Queries
 ----------
-Construct CQL queries by passing arguments or chaining methods. 
+Construct and run CQL queries by passing arguments or chaining methods. See the following sections for basic CRUD operations.
 
 CRUD (Create, Read, Update, Delete) Operations
 ----------
 Create, Read, Update, Delete operations on Models.
 
-Select (Find)
-----------
-SELECT query.
+Create Example (INSERT):
 
-Creating and Updating
-----------
-INSERT and UPDATE queries. Also write information on _is_dirty flag used for updates (and how it doesn't work for arrays and maps, but works for other data-types).
+```
 
-Removing
-----------
-DELETE query. 
+    //Create Example (assuming schemas have been defined and sync'ed - see sync for more information)
+    var Cat = cassie.model('Cat', CatSchema);
+
+    var kitten = new Cat({name: 'eevee'});
+    kitten.save(function(err) {
+        //Handle errors, etc.
+    });
+
+```
+
+Read Example (SELECT):
+
+```
+
+    //Read Example (assuming schemas have been defined & sync'ed - see sync for more information)
+    var Cat = cassie.model('Cat', CatSchema);
+    
+    Cat.find({id: {$in: [1234, 1235, 1236]}).exec(function(err, cats) {
+        console.log(cats.toString());
+    });
+
+```
+
+Update Example (UPDATE):
+Note: Cassie internally stores a flag to know when you've modified fields - for arrays and maps, you must specified that a field has been modified using the Model.markModified('fieldName'); method though (see 'Modeling' for an example)
+
+```
+
+    //Update Example (assuming schemas have been defined & sync'ed - see sync for more information)
+
+    //Create Example (assuming schemas have been defined and sync'ed - see sync for more information)
+    var Cat = cassie.model('Cat', CatSchema);
+
+    var kitten = new Cat({name: 'eevee'});
+    kitten.save(function(err) {
+        
+        //Renaming the cat
+        kitten.name = 'bambie';
+        
+        kitten.save(function(err) {
+            //kitten has now been renamed (Cassie internally stores a flag to know when you've modified fields - for arrays and maps, you must specified that a field has been modified using the kitten.markModified('fieldName'); method though (see 'Modeling' for an example).
+        });
+    });
+
+
+```
+
+Delete Example (DELETE):
+
+```
+
+    //Delete Example (assuming schemas have been defined & sync'ed - see sync for more information)
+    
+    var Cat = cassie.model('Cat', CatSchema);
+    
+    var kitten = new Cat({name: 'eevee'});
+    kitten.save(function(err) {
+        
+        kitten.remove(function(err) {
+            //Kitten has been removed.
+        });
+    });
+    
+
+```
+
 
 Types
 ----------
-Cassie supports the following types. Note that arrays and Maps must have defined types. Consider using a Buffer if you want to store 
+Cassie supports the following types. Note that arrays and Maps must have defined types.
+
+String
+Number (can specify Int by using cassie.types.Int, Double by cassie.types.Double, or Long by cassie.types.Long) - default is Int if you use Number
+Date
+ObjectId (specified by cassie.types.ObjectId or cassie.types.uuid) - this is a uuid v4
+Buffer (Cassandra stores as blobs)
+Arrays (must specify internal type, like: [String])
+Maps (must specify internal types, like {String: String} - arbitrary maps are not supported, use Buffers instead)
 
 Sync
 ----------
@@ -150,7 +217,7 @@ Pre, Post hooks for save, remove. Post hooks for init & validate.
 
 Plugins
 ----------
-Models support plugins. Plugins allow you to share schema properties between models and allow for pre-save hooks.
+Models support plugins. Plugins allow you to share schema properties between models and allow for pre-save hooks, validations, indexes, pretty much anything you can do with a Schema.
 
 Lightweight Transactions
 ----------
@@ -160,13 +227,21 @@ Time to Live (TTL)
 ----------
 TTL option when inserting data.
 
+Limit & Sort
+----------
+Limit & Sort options
+
 Batching
 ----------
 How to batch queries together (fewer network roundtrips).
 
 Examples
 ----------
-Write additional examples here. Execute Prepared, Streaming each row, Streaming each field, stream
+Write additional examples here. Execute Prepared, Stream
+
+Pagination Example
+
+Common schemas / Data models in Cassandra
 
 Client Connections and raw queries
 ----------
@@ -183,10 +258,6 @@ Client connections are handled by node-cassandra-cql. Cassie encapsulates a conn
     });
     
 ```
-
-Mongoose API Differences
-----------
-API differences between Cassie and Mongoose.
 
 Common Issues using Cassandra
 ----------
@@ -213,6 +284,7 @@ Cassie Side:
 * Default - when adding a column, specify default value (in schema / sync)
 * Optional - specify table name when creating (in schema options - should automatically sync to use that tableName)
 * Collections - collection modifications (UPDATE/REMOVE collection in single query with IN clause)
+* Counters are not supported by Cassie
 * Stream rows - node-cassandra-cql supports it, but it was failing in Cassie's tests, so its not included
 * Not on roadmap: Connecting to multiple keyspaces (ie multi-tenancy with one app) - Can currently use a new connection and manually run CQL, but can't sync over multiple keyspaces because schemas and models are tied to a single cassie instance. Current way to deal with this is to use a separate server process (ie a different express/nodejs server process) and don't do multitenancy over multiple keyspaces in the same server process.
 
