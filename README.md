@@ -259,7 +259,7 @@ When writing an application, the general idea is that you preload all your schem
 
 Primary Keys
 ----------
-Write Primary Key information.
+Cassandra requires a primary key for all column families. This means that you would need to define a primary key whenever creating a table. Cassie relaxes that restriction slightly by allowing you to define Schemas without primary keys. However, what Cassie does internally is create an 'id' field on your Schema and adds a pre-save hook to generate an id for all new models (see "Hooks" for how you can do the same). 
 
 Validations
 ----------
