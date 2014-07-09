@@ -168,8 +168,9 @@ Note: Cassie internally stores a flag to know when you've modified fields - for 
     //Alternatively, you can also send update queries if you know some information about the model
     
     var Cat = cassie.model('Cat');
+    var cat_id = 2000; //Assumes cat_id is a number. If uuid, would need to pass uuid as a string
     
-    Cat.remove({id: 2000}, {name: 'bambie'}, function(err) {
+    Cat.remove({id: cat_id}, {name: 'bambie'}, function(err) {
         //Cat with id 2000 has had its name updated
     });
 
@@ -195,10 +196,16 @@ Delete Example (DELETE):
     //Alternatively, you can also send delete queries if you know some information about the model (that Cassandra indexes by)
     
     var Cat = cassie.model('Cat');
+    var cat_id = 2000; //Assumes cat_id is a number. If uuid, would need to pass uuid as a string
     
-    Cat.remove({id: 2000}, 'name', function(err) {
+    Cat.remove({id: cat_id}, 'name', function(err) {
         //Cat with id 2000 has had its name deleted
     });
+    
+    //To delete entire row, ignore second argument. Ex:
+    //Cat.remove({id: cat_id}, function(err) { 
+        //Your callback code 
+    //});
 
 ```
 
@@ -259,7 +266,55 @@ When writing an application, the general idea is that you preload all your schem
 
 Primary Keys
 ----------
-Cassandra requires a primary key for all column families. This means that you would need to define a primary key whenever creating a table. Cassie relaxes that restriction slightly by allowing you to define Schemas without primary keys. However, what Cassie does internally is create an 'id' field on your Schema and adds a pre-save hook to generate an id for all new models (see "Hooks" for how you can do the same). 
+Cassandra requires a primary key for all column families. This means that you would need to define a primary key whenever creating a table. Cassie relaxes that restriction slightly by allowing you to define Schemas without primary keys. However, what Cassie does internally is create an 'id' field on your Schema and adds a pre-save hook to generate an id for all new models (see "Hooks" for how you can do the same). Cassie then marks this 'id' field as your primary key. This is important to note because primary keys cannot be modified using an ALTER TABLE command. In Cassandra, once your primary key has been set for a table, you're not allowed to modify it. If you want sophisticated primary keys (like composite primary keys), you need to design your Data Model appropriately from the beginning and make sure that you define it correctly in your Schema.
+ 
+ See "Data Modeling" notes for more information on designing appropriate models for common use cases. Take particular note of how composite primary keys can be used for quick advanced queries.
+
+The examples below show how a primary key can be explicitly defined on a field, how a composite primary key can be defined, and how to allow Cassie to generate a primary key for you:
+
+```
+
+    //Explicitly defining a primary key
+    var DogSchema = new Schema({
+        'dog_id': {type: Number, primary: true},
+        'fname': String,
+        'lname': String
+    });
+
+```
+
+```
+
+    //Explicitly defining a composite primary key
+    var DogSchema = new Schema({
+        'dog_id': {type: Number},
+        'fname': String,
+        'lname': String
+    }, {primary: ['user_id', 'fname']});
+
+    //Explicitly defining a composite primary key
+    var DogSchema = new Schema({
+        'dog_id': {type: Number},
+        'fname': String,
+        'lname': String
+    }, {primary: [['user_id','fname'], 'lname']});
+
+```
+
+```
+
+    //Cassie defines 'id' field for you - Note that in this case 'dog_id' is NOT the primary key, 'id' is (and 'id' is a uuid v4 type)
+    var DogSchema = new Schema({
+        'dog_id': {type: Number, default: 'uuid'},
+        'fname': String,
+        'lname': String
+    });
+
+```
+
+Secondary Indexing
+----------
+Write index stuff.
 
 Validations
 ----------
@@ -341,13 +396,13 @@ Cassie Side:
 * Counters are not supported by Cassie
 * Stream rows - node-cassandra-cql supports it, but it was failing in Cassie's tests, so its not included
 * Change type of defined columns - should be possible, but need a translation layer between Cassandra's Java Marshaller classes and Cassie types
-* Not on roadmap: Connecting to multiple keyspaces (ie multi-tenancy with one app) - Can currently use a new connection and manually run CQL, but can't sync over multiple keyspaces because schemas and models are tied to a single cassie instance. Current way to deal with this is to use a separate server process (ie a different express/nodejs server process) and don't do multitenancy over multiple keyspaces in the same server process.
+* Not on roadmap: Connecting to multiple keyspaces (ie keyspace multi-tenancy with one app) - Can currently use a new connection and manually run CQL, but can't sync over multiple keyspaces because schemas and models are tied to a single cassie instance. Current way to deal with this is to use a separate server process (ie a different express/nodejs server process) and don't do multitenancy over multiple keyspaces in the same server process.
 
 Driver Side:
 * Input Streaming - not supported by node-cassandra-cql yet
 * SSL Connections - not supported by node-cassandra-cql yet
 * Auto determine other hosts - not supported by node-cassandra-cql yet
-* "Smart connections" - Only send CQL request to the hosts that contain the data (requires knowing about how the data is sharded)
+* "Smart connections" - Only send CQL request to the hosts that contain the data (requires knowing about how the data is sharded) - this might have to be based on your Schemas
 * Possibly switch to officially supported native C/C++ driver when out of beta (would need to test performance and wrap in javascript) - https://github.com/datastax/cpp-driver
 
 Testing & Development

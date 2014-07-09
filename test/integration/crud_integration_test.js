@@ -8,7 +8,7 @@ var connectOptions = {hosts: ["127.0.0.1:9042"], keyspace: "CassieTest"};
 cassie.connect(connectOptions);
 
 var DogSchema = new Schema({
-    'user_id': {type: Number, primary: true, default: 'uuid'},
+    'user_id': {type: Number, primary: true},
     'fname': String,
     'lname': String
 }, {sync: true});
