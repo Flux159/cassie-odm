@@ -133,10 +133,10 @@ Create Example (INSERT):
 ```
 
     //Create Example (assuming schemas have been defined and sync'ed - see sync for more information)
-    var Cat = cassie.model('Cat');
+    var Fish = cassie.model('Fish');
 
-    var kitten = new Cat({name: 'eevee'});
-    kitten.save(function(err) {
+    var fishee = new Fish({fish_id: 2001, name: 'eevee'});
+    fishee.save(function(err) {
         //Handle errors, etc.
     });
 
@@ -147,12 +147,13 @@ Read Example (SELECT):
 ```
 
     //Read Example (assuming schemas have been defined & sync'ed - see sync for more information)
-    var Cat = cassie.model('Cat');
-    
-    Cat.find({id: {$in: [1234, 1235, 1236]}).exec(function(err, cats) {
-        console.log(cats.toString());
-        var cat1 = cats[0]; //...
+    var Fish = cassie.model('Fish');
+
+    Fish.find({fish_id: {$in: [2000, 2001, 2002, 2003, 2004]}}).exec(function(err, fishes) {
+        console.log(fishes.toString());
+        var firstFish = fishes[0]; //...
     });
+
 
 ```
 
@@ -163,29 +164,31 @@ Note: Cassie internally stores a flag to know when you've modified fields - for 
 
     //Update Example (assuming schemas have been defined & sync'ed - see sync for more information)
 
-    //Create Example (assuming schemas have been defined and sync'ed - see sync for more information)
-    var Cat = cassie.model('Cat');
+    var Fish = cassie.model('Fish');
 
-    var kitten = new Cat({name: 'eevee'});
-    kitten.save(function(err) {
-        
-        //Renaming the cat
-        kitten.name = 'bambie';
-        
-        kitten.save(function(err) {
-            //kitten has now been renamed (Cassie internally stores a flag to know when you've modified fields - for arrays and maps, you must specified that a field has been modified using the kitten.markModified('fieldName'); method though (see 'Modeling' for an example).
+    var fishee2 = new Fish({fish_id: 2002, name: 'eevee'});
+    fishee2.save(function(err) {
+
+        //Renaming the fish
+        fishee2.name = 'bambie';
+
+        fishee2.save(function(err) {
+            //fishee2 has now been renamed (Cassie internally stores a flag to know when you've modified fields - for arrays and maps, you must specified that a field has been modified using the fishee2.markModified('fieldName'); method though (see 'Modeling' for an example).
         });
     });
 
     //Alternatively, you can also send update queries if you know some information about the model
-    
-    var Cat = cassie.model('Cat');
-    var cat_id = 2000; //Assumes cat_id is a number. If uuid, would need to pass uuid as a string
-    
-    Cat.remove({id: cat_id}, {name: 'bambie'}, function(err) {
-        //Cat with id 2000 has had its name updated
+
+    var Fish = cassie.model('Fish');
+    var fish_id3 = 2003; //Assumes fish_id is a number. If uuid, would need to pass uuid as a string
+
+    Fish.update({fish_id: fish_id3}, {name: 'bambie'}, function(err) {
+        if(err) console.log(err);
+        //Fish with id 2000 has had its name updated
+        //If no fish with id exists, returns error
     });
 
+    //Fish.update can also take multiple ids in the same way as find: {id: {$in: [1234,1235]} or {id: [1234,1235]}
 
 ```
 
@@ -194,30 +197,35 @@ Delete Example (DELETE):
 ```
 
     //Delete Example (assuming schemas have been defined & sync'ed - see sync for more information)
-    
-    var Cat = cassie.model('Cat');
-    
-    var kitten = new Cat({name: 'eevee'});
-    kitten.save(function(err) {
-        
-        kitten.remove(function(err) {
-            //Kitten has been removed.
+
+    var Fish = cassie.model('Fish');
+
+    var fishee4 = new Fish({fish_id: 2004, name: 'goldee'});
+    fishee4.save(function(err) {
+        if(err) console.log(err);
+
+        fishee4.remove(function(err) {
+            if(err) console.log(err);
+            //Fishee has been removed.
         });
     });
-    
+
     //Alternatively, you can also send delete queries if you know some information about the model (that Cassandra indexes by)
-    
-    var Cat = cassie.model('Cat');
-    var cat_id = 2000; //Assumes cat_id is a number. If uuid, would need to pass uuid as a string
-    
-    Cat.remove({id: cat_id}, 'name', function(err) {
-        //Cat with id 2000 has had its name deleted
+
+    var Fish = cassie.model('Fish');
+    var fish_id5 = 2005; //Assumes fish_id is a number. If uuid, would need to pass uuid as a string
+
+    Fish.remove({fish_id: fish_id5}, 'name', function(err) {
+        if(err) console.log(err);
+        //Fish with id 2001 has had its name deleted
     });
-    
+
     //To delete entire row, ignore second argument. Ex:
-    //Cat.remove({id: cat_id}, function(err) { 
-        //Your callback code 
+    //Fish.remove({id: fish_id5}, function(err) {
+    //Your callback code
     //});
+
+    //Fish.remove can also take multiple ids in the same way as find: {id: {$in: [1234,1235]} or {id: [1234,1235]}
 
 ```
 
@@ -607,6 +615,7 @@ Cassie Side:
 * Collections - collection modifications (UPDATE/REMOVE collection in single query with IN clause)
 * Queries loaded from external CQL files
 * Counters are not supported by Cassie
+* Create table doesn't support options yet: Currently doesn't support properties like compression, compaction, compact storage - would need to add to options parsing for sync
 * Stream rows - node-cassandra-cql supports it, but it was failing in Cassie's tests, so its not included
 * Change type of defined columns - should be possible, but need a translation layer between Cassandra's Java Marshaller classes and Cassie types
 * Not on roadmap: Connecting to multiple keyspaces (ie keyspace multi-tenancy with one app) - Can currently use a new connection and manually run CQL, but can't sync over multiple keyspaces because schemas and models are tied to a single cassie instance. Current way to deal with this is to use a separate server process (ie a different express/nodejs server process) and don't do multitenancy over multiple keyspaces in the same server process.

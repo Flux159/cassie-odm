@@ -1,7 +1,7 @@
 {
 	"author": "Suyog Sonwalkar",
 	"name": "cassie-odm",
-	"description": "ODM for Cassandra that uses node-cassandra-cql",
+	"description": "ODM (Object Data Model) for Cassandra that uses node-cassandra-cql",
 	"version": "0.0.1",
     "keywords": [
         "cassandra",

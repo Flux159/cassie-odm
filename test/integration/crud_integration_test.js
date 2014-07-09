@@ -8,7 +8,7 @@ var connectOptions = {hosts: ["127.0.0.1:9042"], keyspace: "CassieTest"};
 cassie.connect(connectOptions);
 
 var DogSchema = new Schema({
-    'user_id': {type: Number, primary: true},
+    'dog_id': {type: Number, primary: true},
     'fname': String,
     'lname': String
 }, {sync: true});
@@ -28,33 +28,33 @@ describe('Crud', function () {
 
     it('Should create some users, remove a field from a user, check that the field has been removed, then update the field again', function(done) {
 
-        var newUser = new Dog({user_id: 1800, fname: "test", lname: "bob"});
-        var newUser2 = new Dog({user_id: 1801, fname: "test2", lname: "steve"});
+        var newDog = new Dog({dog_id: 1800, fname: "test", lname: "bob"});
+        var newDog2 = new Dog({dog_id: 1801, fname: "test2", lname: "steve"});
 
         var options = {prettyDebug: false, timing: false, logger: null, if_not_exists: false};
 
-        newUser.save(options, function (err) {
+        newDog.save(options, function (err) {
             if (err) {
                 console.log(err);
                 return cassie.close();
             }
 
-            newUser2.save(options, function (err) {
+            newDog2.save(options, function (err) {
                 if (err) {
                     console.log(err);
                     return cassie.close();
                 }
 
-                Dog.remove({user_id: 1800}, 'fname', function () {
+                Dog.remove({dog_id: 1800}, 'fname', function () {
 
-                    Dog.find({user_id: 1800}, 'fname lname', function(err, users) {
+                    Dog.find({dog_id: 1800}, 'fname lname', function(err, users) {
 
                         assert(users[0].fname === null);
                         assert(users[0].lname === 'bob');
 
-                        Dog.update({user_id: 1800}, {fname: 'Dole'}, function () {
+                        Dog.update({dog_id: 1800}, {fname: 'Dole'}, function () {
 
-                            Dog.find({user_id: 1800}, 'fname lname', function(err, users) {
+                            Dog.find({dog_id: 1800}, 'fname lname', function(err, users) {
 
                                 assert(users[0].fname === 'Dole');
                                 assert(users[0].lname === 'bob');
