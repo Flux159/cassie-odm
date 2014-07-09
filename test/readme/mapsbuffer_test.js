@@ -1,6 +1,6 @@
 var assert = require('assert');
 
-describe('Types', function() {
+describe('Maps Buffer', function() {
 
     //Need to test maps, date objects (timestamps), Longs (bigints), Buffers (Blobs), Ints
 
@@ -10,13 +10,13 @@ describe('Types', function() {
         var config = {keyspace: "CassieTest", hosts: ["127.0.0.1:9042"]};
         cassie.connect(config);
 
-//        var MapsBuffer = new cassie.Schema({name: String, specialMap: {type: {String: String}, buff: cassie.types.Buffer}});
-        var MapsBuffer = new cassie.Schema({name: String, buff: Buffer});
+        var MapsBuffer = new cassie.Schema({name: String, specialmap: {type: {String: String}, buff: cassie.types.Buffer}});
+//        var MapsBuffer = new cassie.Schema({name: String, buff: Buffer});
         var Maps = cassie.model('Maps', MapsBuffer);
 
         cassie.syncTables(config, {debug: true, prettyDebug: true}, function (err, results) {
 
-            var t1 = new Maps({name: 'Hello', buff: Buffer('dadfdjkva')});
+            var t1 = new Maps({name: 'Hello', buff: Buffer('dadfdjkva'), specialmap: {'test': 'blah'}});
 
             t1.save({debug: true, prettyDebug: true}, function(err) {
                 if(err){
