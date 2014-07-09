@@ -7,33 +7,24 @@ Getting Started
 ```
 
     var cassie = require('cassie-odm');
-    cassie.connect({keyspace: "mykeyspace", hosts: ["127.0.0.1:9042"]});
+    var config = {keyspace: "CassieTest", hosts: ["127.0.0.1:9042"]};
+    cassie.connect(config);
     
     var CatSchema = new cassie.Schema({name: String});
     var Cat = cassie.model('Cat', CatSchema);
     
-    var kitty = new Cat({ name: 'Eevee'});
-    kitty.save(function(err) {
-        if(err) return console.log(err);
-        console.log("meow");
-        cassie.close();
-    });
-
-```
-
-Client Connections
-----------
-Client connections are handled by node-cassandra-cql. Cassie encapsulates a connection internally, but you can also use the node-cassandra-cql connection directly for CQL queries:
-
-```
-
-    var cassie = require('cassie-odm');
-    var connection = cassie.connect({keyspace: "mykeyspace", hosts: ["127.0.0.1:9042"]});
+    cassie.syncTables(config, function(err, results) {
     
-    connection.execute("SELECT * FROM cats", [], function(err, results) {
-        if(err) return console.log(err);
-        console.log("meow");
+        var kitty = new Cat({ name: 'Eevee'});
+        kitty.save(function(err) {
+            if(err) return console.log(err);
+            console.log("meow");
+            cassie.close();
+        });
+        
     });
+    
+
 ```
 
 Modeling
@@ -43,7 +34,7 @@ Modeling is the process of defining your Schemas. Although Cassandra is a NoSQL 
 ```
 
     var cassie = require('cassie-odm'); //Require cassie module
-    var connection = cassie.connect({keyspace: "mykeyspace", hosts: ["127.0.0.1:9042"]}); //Connect to local cassandra server
+    var connection = cassie.connect({keyspace: "CassieTest", hosts: ["127.0.0.1:9042"]}); //Connect to local cassandra server
     
     //User Schema
     var UserSchema = new Schema({
@@ -168,6 +159,22 @@ Examples
 ----------
 Write additional examples here. Execute Prepared, Streaming each row, Streaming each field, stream
 
+Client Connections and raw queries
+----------
+Client connections are handled by node-cassandra-cql. Cassie encapsulates a connection internally, but you can also use the node-cassandra-cql connection directly for CQL queries:
+
+```
+
+    var cassie = require('cassie-odm');
+    var connection = cassie.connect({keyspace: "mykeyspace", hosts: ["127.0.0.1:9042"]});
+    
+    connection.execute("SELECT * FROM cats", [], function(err, results) {
+        if(err) return console.log(err);
+        console.log("meow");
+    });
+    
+```
+
 Mongoose API Differences
 ----------
 API differences between Cassie and Mongoose.
@@ -217,7 +224,9 @@ Clone the repository and run the following from command line:
 
 ```
 
-Note: 'npm test' creates a keyspace "CassieODMTest" on your local Cassandra server.
+Note: 'npm test' creates a keyspace "CassieODMTest" on your local Cassandra server then deletes it when done.
+
+Get code coverage reports by running 'npm run test-coverage'.
 
 Submit pull requests for any bug fixes!
 
