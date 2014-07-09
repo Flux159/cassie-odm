@@ -395,7 +395,7 @@ Cassie supports pre-save and pre-remove hooks for its models. It also supports p
 
 ```
 
-Note that hooks are only called on Cassie Model instances, not when performing Model.update or Model.remove (because those are direct database calls that don't generate any Cassie instances).
+Note that hooks are only called on Cassie object instances, not when performing Model.update or Model.remove (because those are direct database calls that don't generate any Cassie instances).
 
 Plugins
 ----------
@@ -451,7 +451,7 @@ Note that currently, the IF field = value clause is not supported for updates (o
 
 Time to Live (TTL)
 ----------
-Cassie supports specifying a TTL when inserting data via the {ttl: Number} option, where Number is the time in seconds.
+Cassie supports specifying a TTL when inserting data via the {ttl: Number} option, where Number is the time in seconds. Also see "Sessions".
 
 ```
 
@@ -528,7 +528,7 @@ Cassie can execute prepared queries by passing in a "prepared" option when calli
 
 Streaming
 ----------
-Cassie supports streaming results via a Query.stream(options, callback) method. This returns a node-cassandra-cql stream (can view documentation for that as well). See the example below:
+Cassie supports streaming results via a Query.stream(options, callback) method. This returns a readable stream (can view documentation for node-cassandra-cql streams as well). See the example below:
 
 ```
 
