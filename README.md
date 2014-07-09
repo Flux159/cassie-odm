@@ -322,6 +322,9 @@ Cassie supports secondary indexes on fields with the following option {index: tr
         'fname': {type: String, index: true},
         'lname': String
     });
+    
+    //Alternative way of defining a secondary index
+    DogSchema.index('lname');
 
 Validations
 ----------
@@ -384,10 +387,34 @@ Note that hooks are only called on Cassie Model instances, not when performing M
 
 Plugins
 ----------
-Models support plugins. Plugins allow you to share schema properties between models and allow for pre-save hooks, validations, indexes, pretty much anything you can do with a Schema.
+Models support plugins. Plugins allow you to share schema properties between models and allow for pre-save hooks, validations, indexes, pretty much anything you can do with a Schema. Note that you can't modify primary keys or add primary keys in a plugin.
 
+```
+    
+    //updatedAtPlugin.js
+    module.exports = exports = function updatedAtPlugin(schema, options) {
+        schema.add({updated_at: Date});
+        
+        schema.pre('save', function(model) {
+            model.updated_at = new Date();
+        });
+        
+        if(options && options.index) {
+            schema.index('updated_at');
+        }
+    };
 
+    //user.js
+    var updatedAtPlugin = require('./updatedAtPlugin);
+    var User = new Schema({ ... });
+    User.plugin(updatedAtPlugin, {index: true});
 
+    //blog.js
+    var updatedAtPlugin = require('./updatedAtPlugin);
+    var Blog = new Schema({ ... });
+    Blog.plugin(updatedAtPlugin, {index: true});
+
+```
 
 Lightweight Transactions
 ----------
@@ -453,6 +480,7 @@ Cassie Side:
 * Paging - need to support some form of client side paging for common use case (I'm thinking primary key timestamp based?)
 * Default - when adding a column, specify default value (in schema / sync)
 * Optional - specify table name when creating (in schema options - should automatically sync to use that tableName)
+* Additional Lightweight Transactions - specifically IF field = value (currently only supports IF NOT EXISTS clause)
 * Collections - collection modifications (UPDATE/REMOVE collection in single query with IN clause)
 * Counters are not supported by Cassie
 * Stream rows - node-cassandra-cql supports it, but it was failing in Cassie's tests, so its not included
