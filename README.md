@@ -541,7 +541,7 @@ Cassie supports streaming results via a Query.stream(options, callback) method. 
 
     var User = cassie.model('User');
     
-    var query = User.find({id: {$in: [1000, 1001, 1002, 1003]}});
+    var query = User.find({user_id: {$in: [1000, 1001, 1002, 1003]}});
     query.stream()
         .on('readable', function() {
             var row;
@@ -551,9 +551,12 @@ Cassie supports streaming results via a Query.stream(options, callback) method. 
         })
         .on('end', function() {
             //Stream ended
+            console.log("Stream ended");
+            cassie.close();
         })
-        .on('error', function() {
+        .on('error', function(err) {
             //Stream error
+            console.log(err);
         });
 
 ```
