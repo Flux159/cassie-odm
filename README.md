@@ -600,24 +600,72 @@ Client connections are handled by node-cassandra-cql. Cassie encapsulates a conn
 Keyspace Replication Strategy and Production notes
 ----------
 
-By default, cassie assumes that you are developing locally and 
+By default, cassie assumes that you are developing locally and creates keyspaces with a "Simple Replication Strategy" and a replication factor of 1. This is not ideal for a production setup. A production Cassandra cluster will generally have a minimum of 3 nodes, a "Network Topology Replication Strategy" and a replication factor of 3. What this means is that you have 3 instances of Cassandra running (generally on separate servers). This allows you to survive the loss of one of the servers without losing your data (and once a third node is added back, Cassandra will automatically populate the node with the data it needs). Since cassie can create keyspaces, it needs to know what strategy to use when creating the keyspace. It does this by checking for options in your connection configuration. Specifically, it checks for a field "replication" that contains an object with the replication options. See the example below for the default setting and for a standard "Network Topology with replication factor of 3" setting.
 
 ```
+
+    //Standard setting (passed to cassie)
+    config {
+        hosts: ['127.0.0.1', '127.0.0.2', '127.0.0.3'],
+        keyspace: 'mykeyspace',
+        replication: {
+            strategy: 'SimpleStrategy', //Default is 'SimpleStrategy', NOTE: Use 'NetworkTopologyStrategy' for production
+            replication_factor: 1, //Default is 1 (only used with SimpleStrategy). Not used for 'NetworkTopologyStrategy'
+            strategy_options: { //Strategy options is only used for NetworkTopologyStrategy, not for SimpleStrategy
+                '0': 3
+                // '10':3,
+                // '20':3
+            }
+    }
+    
+    //Strategy options is only taken into account for NetworkTopologyStrategy - if not specified, then throws error if trying to sync. The key specified in strategy options is your database name (which varies based on what "Snitch" you set in your cassandra.yaml file. For a file property based snitch, you would define it to be your database name. The '0' here is specified if you use a RankInferringSnitch and your database is located at an internal IP of xxx.0.xxx.xxx (see Cassandra Documentation for more information).
+    
 
 ```
 
 Common Issues using Cassandra
 ----------
-Write some common differences between CQL and RDBMs (SQL). What is not supported by CQL. Write some differences between Cassandra and MongoDB.
+Some common differences between CQL and RDBMs (SQL). What is not supported by CQL. Write some differences between Cassandra and MongoDB, Riak, neo4j, other NoSQL dbs. Integrations between Cassandra and full-text-search engines, Titan for graph analytics, Apache Spark for Map Reduce (all part of a Java DB / Analytics Stack).
+ 
+You can't sort or use greater than or less than operators on a non-composite primary key column (see example below on what you can sort on). Primary keys can only be searched using equality or "IN". The way to get around this is to use composite primary keys with the appropriate columns. Because of this, you need to design your data models differently (full normalization is generally not a good idea, your data needs to be partially denormalized for good consistent performance - see Data modeling notes for more information).
+  
+Secondary indices are usually only good when you have fields that are common across many rows. A good example is when you have a list of people, each containing state and country information. You would put a secondary index on the state field and on the country field if you wanted to query "What users are located in this state" or "What users are located in this country". You can only use equality operators on secondary indices (see example below)
+  
+Unlike MongoDB, you can't put arbitrary JSON data into Cassandra (must define a schema - although you can always add columns later). (Note that you can put blobs/buffers into Cassandra, but its generally not a good idea to consistently use Blobs). No JOINS as CQL is not SQL and Cassandra is not a traditional RDMS like MySQL or Postgres (/Oracle or SQL Server).
+   
+Unlike MongoDB and Riak, Cassandra doesn't come with full text search built-in. You would need to use Apache Solr, Elastic Search, or any other full text search indexing engine to support full text search (Datastax Enterprise which is built on top of Cassandra integrates Apache Solr, you can also achieve something similar by writing an Elastic Search river that pulls data from Cassandra).
+   
+Cassandra is not a graph database like neo4j or OrientDB, but you can apparently integrate Titan with Cassandra for Graph / Geolocation type queries.
+
+Cassandra does not come with Map Reduce capabilities built in, but you can integrate with Apache Spark / Apache Hadoop for advanced Map Reduce queries / operations.
+
+See Data Modeling for how to model common use cases (Many-to-many modeling, pagination, etc.).
+
+```
+
+    //Can't sort on name
+
+
+    //Can sort on name
+
+
+    //Secondary index can only use '=' operator
+
+
+```
+
+
+Cassie relaxes schema definitions significantly by auto syncing your tables and warning you when your schema may have additional data.
 
 Why Cassandra
 ----------
-Why would you want to use Cassandra with those limitations? Cassandra provides a truly distributed, fault tolerant design (kind of like auto-sharded, auto-replicated, master-master). Cassandra is designed so that if any one node goes down, you can create another node, attach it to the cluster, and retrieve the "lost" data without any downtime. Cassandra provides linearly scalable reads and writes based on the number of nodes in a cluster. In other words, when you need more reads/sec or writes/sec, you can simply add another node to the cluster. Finally, with Cassie, you get relatively easy data modeling in nodejs that compares to the ease of use of MongoDB using Mongoose (once you understand some data modeling differences).
-
-When to use Cassandra
-----------
-
-With all that being said, there are some use cases where it would be easier to use MongoDB or MySQL / PostgreSQL as opposed to Cassandra. 
+Why would you want to use Cassandra with those limitations? Cassandra provides a truly distributed, fault tolerant design (kind of like auto-sharded, auto-replicated, master-master database). Cassandra is designed so that if any one node goes down, you can create another node, attach it to the cluster, and retrieve the "lost" data without any downtime. Cassandra provides linearly scalable reads and writes based on the number of nodes in a cluster. In other words, when you need more reads/sec or writes/sec, you can simply add another node to the cluster. This means that your database can scale automatically similarly to how your API layer can (with good data modeling practices, some initialization scripts & virtual machine tweaks of course).
+ 
+ In addition, Cassandra is built with multi-datacenter support (across Wide Area Networks (WAN))
+ 
+ 
+ 
+ Finally, with Cassie, you get relatively easy data modeling in nodejs that compares to the ease of use of MongoDB using Mongoose (once you understand some data modeling differences).
 
 Data Modelling Notes
 ----------
@@ -627,6 +675,14 @@ Common Examples
 ----------
 
 Pagination Example
+
+http://apmblog.compuware.com/2011/12/05/pagination-with-cassandra-and-what-we-can-learn-from-it/
+
+https://issues.apache.org/jira/browse/CASSANDRA-4415
+
+http://stackoverflow.com/questions/16951532/cassandra-pagination-how-to-use-get-slice-to-query-a-cassandra-1-2-database-fro
+
+http://www.datastax.com/dev/blog/whats-new-in-cql-3-0
 
 Common schemas / Data models in Cassandra
 
@@ -639,7 +695,7 @@ Not yet supported (on roadmap)
 
 Cassie Side:
 * Hinting - node-cassandra-cql supports hinting (if you want to use it, use the connection provided or cassie.cql)
-* Paging - need to support some form of client side paging for common use case (I'm thinking primary key timestamp based?)
+* Paging - need to support some form of client side paging for common use case (I'm thinking composite primary key w/ timestamp & limit?)
 * Default - when adding a column, specify default value (in schema / sync)
 * Optional - specify table name when creating (in schema options - should automatically sync to use that tableName)
 * Additional Lightweight Transactions - specifically IF field = value (currently only supports IF NOT EXISTS clause)
