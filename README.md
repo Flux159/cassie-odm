@@ -342,6 +342,8 @@ Validations
 ----------
 Validations are a core part of Cassie's Object Data Model. Validations allow you to easily reject inserts and updates across all your models in javascript without ever hitting your database. Cassie comes with internal support for a "required" validation and also allows you to validate any field with a custom function.
 
+```
+
     //Requiring that 'fname' is provided (is not null)
     var DogSchema = new Schema({
         'dog_id': {type: Number, primary: true},
@@ -357,6 +359,7 @@ Validations are a core part of Cassie's Object Data Model. Validations allow you
     //A validate function is passed the model and the fieldKey to validate. It returns true or false.
     //The validation function above requires that 'lname' is equal to 'doge' for all models
 
+```
 
 Hooks
 ----------
@@ -406,24 +409,24 @@ Models support plugins. Plugins allow you to share schema properties between mod
     //updatedAtPlugin.js
     module.exports = exports = function updatedAtPlugin(schema, options) {
         schema.add({updated_at: Date});
-        
+    
         schema.pre('save', function(model) {
             model.updated_at = new Date();
         });
-        
+    
         if(options && options.index) {
             schema.index('updated_at');
         }
     };
-
+    
     //user.js
-    var updatedAtPlugin = require('./updatedAtPlugin);
-    var UserSchema = new Schema({ ... });
+    var updatedAtPlugin = require('./updatedAtPlugin');
+    var UserSchema = new Schema({name: String});
     UserSchema.plugin(updatedAtPlugin, {index: true});
-
+    
     //blog.js
-    var updatedAtPlugin = require('./updatedAtPlugin);
-    var BlogSchema = new Schema({ ... });
+    var updatedAtPlugin = require('./updatedAtPlugin');
+    var BlogSchema = new Schema({title: String});
     BlogSchema.plugin(updatedAtPlugin, {index: true});
 
 ```
