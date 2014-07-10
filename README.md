@@ -554,6 +554,26 @@ Cassie supports streaming results via a Query.stream(options, callback) method. 
 
 ```
 
+Timing and Debugging
+----------
+Cassie supports timing and debugging capabilities (including a prettyDebug mode which prints using colored text to a supported terminal and is far more human readable than standard debugging). These options are supported on almost all Cassie queries (timing is not supported on sync tables because it should really only be called once after preloading all your schemas). To use the options, simply pass the following object to a query as part of its options:
+
+```
+
+    var options = {debug: true, timing: true, prettyDebug: true};
+    
+    //Examples
+    
+    //User.find({}, options, callback);
+
+    //var user = new User({name: 'Steve'});
+    //user.save(options, callback);
+    
+    //var query = user.save();
+    //query.exec(options, callback);
+
+```
+
 Client Connections and raw queries
 ----------
 Client connections are handled by node-cassandra-cql. Cassie encapsulates a connection internally, but you can also use the node-cassandra-cql connection directly for CQL queries:
@@ -611,7 +631,7 @@ Cassie Side:
 * Queries loaded from external CQL files
 * Counters are not supported by Cassie
 * Create table doesn't support options yet: Currently doesn't support properties like compression, compaction, compact storage - would need to add to options parsing for sync
-* Stream rows - node-cassandra-cql supports it, but it was failing in Cassie's tests, so its not included
+* Stream rows - node-cassandra-cql supports it, but it was failing in Cassie's tests, so its not included at the moment (stream is included though and performs a similar function)
 * Change type of defined columns - should be possible, but need a translation layer between Cassandra's Java Marshaller classes and Cassie types
 * Not on roadmap: Connecting to multiple keyspaces (ie keyspace multi-tenancy with one app) - Can currently use a new connection and manually run CQL, but can't sync over multiple keyspaces because schemas and models are tied to a single cassie instance. Current way to deal with this is to use a separate server process (ie a different express/nodejs server process) and don't do multitenancy over multiple keyspaces in the same server process.
 
