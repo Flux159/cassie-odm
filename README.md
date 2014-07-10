@@ -257,6 +257,8 @@ Cassie also cannot change the primary key for any table after it has been create
 
 Finally, Cassie does not delete columns or tables from your database if they aren't defined. You can pass a "warning: true" option to sync tables to tell you which columns are missing from your schemas, but Cassie will not delete the columns for you (to prevent unintended data loss). This is what "syncing forward" implies.
 
+NOTE: Make sure to read about "Keyspace Replication Strategies and Production Notes" if you intend on using Cassandra in Production. It is required to understand replication strategies for production, particularly for automated deployment setups.
+
 Here is an example of using sync tables to sync two tables to the database with debugging and warning flags enabled:
 
 ```
@@ -283,6 +285,8 @@ Here is an example of using sync tables to sync two tables to the database with 
 ```
 
 When writing an application, the general idea is that you preload all your schemas into cassie, then sync your models once before running your other code (ie before starting an express application or web server). This will give you access to all your models whenever you need them by using the cassie.model('ModelName') function. An example of this process is given in the [wiki](http://wiki).
+
+A final thing to note is that you can specify Keyspace replication strategy's in your Cassie config (if you let Cassie create your keyspaces for you - you can do this yourself through cqlsh, but Cassie can automate the process as well). See "Keyspace Replication Strategy and Production Notes" for more information.
 
 Primary Keys
 ----------
@@ -468,7 +472,7 @@ Cassie supports specifying a TTL when inserting data via the {ttl: Number} optio
 
 ```
 
-Limit
+Limit & Sorting
 ----------
 Cassie can limit your queries based on options or by chaining queries. See the examples below:
 
@@ -494,16 +498,16 @@ Cassie can batch queries together to run at once. This is done by not specifying
 
 ```
 
-    var User = cassie.model('User');
-    var new_user_1 = new User({name: 'Bob'});
-    var new_user_2 = new User({name: 'Steve'});
-    
+    var new_user_1 = new User({user_id: 1000, name: 'Bob'});
+    var new_user_2 = new User({user_id: 2000, name: 'Steve'});
+
     var query_1 = new_user_1.save();
     var query_2 = new_user_2.save();
-    
+
     var batchOptions = {debug: true, prettyDebug: true, timing: true};
-    cassie.batch([query1, query2], batchOptions, function(err) {
+    cassie.batch([query_1, query_2], batchOptions, function(err) {
         //Handle errors, etc.
+        if(err) console.log(err);
     });
     
 
@@ -517,12 +521,12 @@ Cassie can execute prepared queries by passing in a "prepared" option when calli
 
     var User = cassie.model('User');
     
-    User.find({id: {$in: [1000, 1001, 1002, 1003]}}, {prepared: true}, function(err, users) {
+    User.find({user_id: {$in: [1000, 1001, 1002, 1003]}}, {prepared: true}, function(err, users) {
         //Handle errors, do stuff w/ results
     });
     
     //This is equivalent to the above
-    var query = User.find({id: {$in: [1000, 1001, 1002, 1003]}});
+    var query = User.find({user_id: {$in: [1000, 1001, 1002, 1003]}});
     query.exec({prepared: true}, function(err, users) {
         //Handle errors, do stuff w/ results
     });
@@ -588,6 +592,15 @@ Client connections are handled by node-cassandra-cql. Cassie encapsulates a conn
         console.log("meow");
     });
     
+```
+
+Keyspace Replication Strategy and Production notes
+----------
+
+By default, cassie assumes that you are developing locally and 
+
+```
+
 ```
 
 Common Issues using Cassandra
