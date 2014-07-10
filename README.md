@@ -2,6 +2,8 @@ Cassie
 =====
 Cassie is a model layer and CQL generator written in javascript that uses the [node-cassandra-cql](https://github.com/jorgebay/node-cassandra-cql) project and attempts to mimic most of mongoose's API to allow for easy switching between MongoDB and Cassandra. Note that Cassie-ODM is not currently a full 1:1 mapping to mongoose's API (and probably will never be due to certain architectural differences between Cassandra and MongoDB).
 
+Cassie is currently in beta (as of v0.1.0). Use at your own risk in production environments.
+
 Installing
 ----------
 If you have nodejs installed, just run the following in your project's directory:
@@ -625,51 +627,75 @@ By default, cassie assumes that you are developing locally and creates keyspaces
 
 Common Issues using Cassandra
 ----------
-Some common differences between CQL and RDBMs (SQL). What is not supported by CQL. Write some differences between Cassandra and MongoDB, Riak, neo4j, other NoSQL dbs. Integrations between Cassandra and full-text-search engines, Titan for graph analytics, Apache Spark for Map Reduce (all part of a Java DB / Analytics Stack).
  
 You can't sort or use greater than or less than operators on a non-composite primary key column (see example below on what you can sort on). Primary keys can only be searched using equality or "IN". The way to get around this is to use composite primary keys with the appropriate columns. Because of this, you need to design your data models differently (full normalization is generally not a good idea, your data needs to be partially denormalized for good consistent performance - see Data modeling notes for more information).
   
 Secondary indices are usually only good when you have fields that are common across many rows. A good example is when you have a list of people, each containing state and country information. You would put a secondary index on the state field and on the country field if you wanted to query "What users are located in this state" or "What users are located in this country". You can only use equality operators on secondary indices (see example below)
   
-Unlike MongoDB, you can't put arbitrary JSON data into Cassandra (must define a schema - although you can always add columns later). (Note that you can put blobs/buffers into Cassandra, but its generally not a good idea to consistently use Blobs). No JOINS as CQL is not SQL and Cassandra is not a traditional RDMS like MySQL or Postgres (/Oracle or SQL Server).
+Unlike MySQL, PostgreSQL, or other Relational Databases, you can't do JOINs across tables in Cassandra. This also means that its not a good idea to fully normalize your data (see "Data Modeling Notes". 
+  
+Unlike MongoDB (or recent versions of PostgreSQL), you can't put arbitrary JSON data into Cassandra (must define a schema - although you can always add columns later). Note that you can put blobs/buffers into Cassandra, but its generally not a good idea to consistently use Blobs. Cassie relaxes schema definitions significantly by auto syncing your tables and warning you when your schema may have additional data.
    
 Unlike MongoDB and Riak, Cassandra doesn't come with full text search built-in. You would need to use Apache Solr, Elastic Search, or any other full text search indexing engine to support full text search (Datastax Enterprise which is built on top of Cassandra integrates Apache Solr, you can also achieve something similar by writing an Elastic Search river that pulls data from Cassandra).
    
 Cassandra is not a graph database like neo4j or OrientDB, but you can apparently integrate Titan with Cassandra for Graph / Geolocation type queries.
 
-Cassandra does not come with Map Reduce capabilities built in, but you can integrate with Apache Spark / Apache Hadoop for advanced Map Reduce queries / operations.
+Cassandra does not come with Map Reduce capabilities built in, but you can integrate with Apache Spark / Apache Hadoop for advanced Map Reduce queries / operations (Datastax Enterprise apparently comes with integrations for Hadoop).
 
-See Data Modeling for how to model common use cases (Many-to-many modeling, pagination, etc.).
+See Data Modeling Notes and Common Examples for how to model common use cases (Many-to-many modeling, pagination, etc.) and how to use Cassandra effectively.
 
 ```
 
     //Can't sort on name
+    var UserSchema = new Schema({user_id: Number, name: String}, {primary: ['user_id']});
+    var User = cassie.model('User', UserSchema);
+    User.find({user_id: [1000, 1001, 1002, 1003]}).sort({name: 1}).exec(callback);
+    
+    //Can't sort on name
+    var UserSchema = new Schema({user_id: Number, name: String}, {primary: ['user_id']});
+    UserSchema.index('name');
+    var User = cassie.model('User', UserSchema);
+    User.find({user_id: [1000, 1001, 1002, 1003]}).sort({name: 1}).exec(callback);
 
-
-    //Can sort on name
-
-
+    //Can sort on name (Composite primary key)
+    var UserSchema = new Schema({user_id: Number, name: String}, {primary: ['user_id', 'name']});
+    var User = cassie.model('User', UserSchema);
+    User.find({user_id: [2000, 2001, 2002, 2003]}).limit(10).sort({name: 1}).exec(callback);
+    
     //Secondary index can only use '=' operator
+    var UserSchema = new Schema({user_id: Number, name: String}, {primary: ['user_id']});
+    UserSchema.index('name');
+    var User = cassie.model('User', UserSchema);
+    User.find({name: 'smith'}, callback); //Works
+    User.find({name: ['smith', 'bob']}, callback); //Doesn't work
+    User.find({name: {$gt: 'bob', $lt: 'smith'}}, callback) //Doesn't work
 
 
 ```
 
-
-Cassie relaxes schema definitions significantly by auto syncing your tables and warning you when your schema may have additional data.
-
 Why Cassandra
 ----------
-Why would you want to use Cassandra with those limitations? Cassandra provides a truly distributed, fault tolerant design (kind of like auto-sharded, auto-replicated, master-master database). Cassandra is designed so that if any one node goes down, you can create another node, attach it to the cluster, and retrieve the "lost" data without any downtime. Cassandra provides linearly scalable reads and writes based on the number of nodes in a cluster. In other words, when you need more reads/sec or writes/sec, you can simply add another node to the cluster. This means that your database can scale automatically similarly to how your API layer can (with good data modeling practices, some initialization scripts & virtual machine tweaks of course).
+Why would you want to use Cassandra with those limitations? Cassandra provides a truly distributed, fault tolerant design (kind of like an auto-sharded, auto-replicated, master-master database). Cassandra is designed so that if any one node goes down, you can create another node, attach it to the cluster, and retrieve the "lost" data without any downtime. Cassandra provides linearly scalable reads and writes based on the number of nodes in a cluster. In other words, when you need more reads/sec or writes/sec, you can simply add another node to the cluster. This means that your database can scale automatically similarly to how your API layer can (with good data modeling practices, some initialization scripts & virtual machine tweaks of course).
  
- In addition, Cassandra is built with multi-datacenter support (across Wide Area Networks (WAN))
- 
- 
+ In addition, Cassandra is built with multi-datacenter support (across Wide Area Networks (WAN)).
  
  Finally, with Cassie, you get relatively easy data modeling in nodejs that compares to the ease of use of MongoDB using Mongoose (once you understand some data modeling differences).
 
 Data Modelling Notes
 ----------
-Write some notes on how to properly model data in Cassandra.
+
+Datastax has tutorials on data modeling:
+
+[Datastax Data Modeling](http://www.datastax.com/resources/data-modeling)
+
+Its highly recommended that you read at least these two tutorials on Cassandra Data Modeling before designing your models.
+
+[Cassandra Data Modeling Best Practices Part 1 - Ebay Tech Blog](http://www.ebaytechblog.com/2012/07/16/cassandra-data-modeling-best-practices-part-1/#.U7YP_Y1dU_Q)
+[Cassandra Data Modeling Best Practices Part 2 - Ebay Tech Blog](http://www.ebaytechblog.com/2012/08/14/cassandra-data-modeling-best-practices-part-2/#.U7YQGI1dU_Q)
+
+In addition, take a look at some of Datastax's other tutorials:
+
+[Datastax Cassandra Tutorials](http://www.datastax.com/dev/tutorials)
 
 Common Examples
 ----------
@@ -688,7 +714,7 @@ Common schemas / Data models in Cassandra
 
 Session Storage
 ----------
-See [cassie-store](http://github.com/Flux159/cassie-store) for an express compatible session store. Also has notes on how to manually create a session store using cassie.
+See [cassie-store](http://github.com/Flux159/cassie-store) for an express compatible session store that uses Cassie.
 
 Not yet supported (on roadmap)
 ----------
@@ -717,7 +743,7 @@ Driver Side:
 Testing & Development
 ----------
 Pre-reqs:
-Nodejs installed and a Cassandra server running on localhost:9160 (see [wiki](http://wiki) for more information on installing Cassandra).
+Nodejs installed and a Cassandra server running on localhost:9042
 Clone the repository and run the following from command line:
 
 ```
@@ -726,7 +752,7 @@ Clone the repository and run the following from command line:
 
 ```
 
-Note: 'npm test' creates a keyspace "CassieTest" on your local Cassandra server then deletes it when done.
+Note: 'npm test' creates a keyspace "cassietest" on your local Cassandra server then deletes it when done.
 
 Get code coverage reports by running 'npm run test-coverage' (coverage reports will go into /coverage directory).
 
@@ -741,11 +767,14 @@ In addition, for information on developer and minimal production setups (includi
 
 For information on adding nodes, migrating data, and creating snapshots and backups, see this [wiki link](http://wiki3).
 
-For information on Cassandra, including why to choose Cassandra as your database, go to the [Apache Cassandra homepage](http://cassandra.apache.org/).
+For information on Cassandra, go to the [Apache Cassandra homepage](http://cassandra.apache.org/).
 
 For information on Cassandra's fault-tolerant, distributed architecture, see [the original Facebook whitepaper on Cassandra annotated with differences](http://www.datastax.com/documentation/articles/cassandra/cassandrathenandnow.html). Alternatively, also read Google's [BigTable architecture whitepaper](http://static.googleusercontent.com/media/research.google.com/en/us/archive/bigtable-osdi06.pdf) and [Amazon's Dynamo whitepaper](http://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf) as Cassandra's design was influenced by both.
 
-For helpful tips on data modeling in Cassandra (particularly if you come from a SQL background), see these two links:
+For helpful tips on data modeling in Cassandra (particularly if you come from a SQL background), see these links:
+[Datastax Data Modeling](http://www.datastax.com/resources/data-modeling)
+[Datastax Cassandra Tutorials](http://www.datastax.com/dev/tutorials)
 [Cassandra Data Modeling Best Practices Part 1 - Ebay Tech Blog](http://www.ebaytechblog.com/2012/07/16/cassandra-data-modeling-best-practices-part-1/#.U7YP_Y1dU_Q)
 [Cassandra Data Modeling Best Practices Part 2 - Ebay Tech Blog](http://www.ebaytechblog.com/2012/08/14/cassandra-data-modeling-best-practices-part-2/#.U7YQGI1dU_Q)
-[Datastax Cassandra Tutorials](http://www.datastax.com/dev/tutorials)
+
+Other databases to look at if Cassandra doesn't fit your data needs: MySQL, PostgreSQL, MongoDB, Riak, neo4j, RethinkDB, OrientDB, Hyperdex.
