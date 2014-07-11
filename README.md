@@ -447,9 +447,9 @@ Models support plugins. Plugins allow you to share schema properties between mod
 Lightweight Transactions
 ----------
 
-Cassie supports lightweight transactions for saving data via the {if_not_exists: Boolean} option.
+Cassie supports lightweight transactions for saving new data via the {if_not_exists: Boolean} option.
 
-Note that currently, the IF field = value clause is not supported for updates (on roadmap).
+For updating data, you can use the IF field = 'value' CQL command by passing {if: {field: value}} as an option to save.
 
 ```
 
@@ -460,7 +460,19 @@ Note that currently, the IF field = value clause is not supported for updates (o
     
     new_user.save({if_not_exists: true}, function(err) {
         //Handle errors, etc.
+        
+        //Same user using IF field = value
+        new_user.name = "bill";
+        
+        new_user.save({if: {name: 'bob'}, debug: true}, function(err) {
+            
+            //Handle errors, etc.
+            //Note that this query will not update new_user because new_user's name is not 'bob'
+        
+        });
+        
     });
+    
 
 ```
 
@@ -730,7 +742,7 @@ Datastax has tutorials on data modeling:
 
 In particular, see this one for common examples (One-to-many, Many-to-many, transactions): [Link](https://www.youtube.com/watch?v=px6U2n74q3g)
 
-Its highly recommended that you read at least the above video and these two tutorials on Cassandra Data Modeling before designing your models.
+Its highly recommended that you view at least the above video and read these two tutorials on Cassandra Data Modeling before designing your models.
 
 [Cassandra Data Modeling Best Practices Part 1 - Ebay Tech Blog](http://www.ebaytechblog.com/2012/07/16/cassandra-data-modeling-best-practices-part-1/#.U7YP_Y1dU_Q)
 [Cassandra Data Modeling Best Practices Part 2 - Ebay Tech Blog](http://www.ebaytechblog.com/2012/08/14/cassandra-data-modeling-best-practices-part-2/#.U7YQGI1dU_Q)
@@ -768,7 +780,6 @@ Not yet supported (on roadmap)
 Cassie Side:
 * Hinting - node-cassandra-cql supports hinting (if you need to use it, use the node-cassandra-cql connection to make your query)
 * Optional - specify table name when creating (in schema options - should automatically sync to use that tableName)
-* Additional Lightweight Transactions - specifically IF field = value (currently only supports IF NOT EXISTS clause)
 * Collections - collection modifications - (UPDATE/REMOVE in single query with IN clause is supported, but Cassie doesn't do collection manipulation yet)
 * Queries loaded from external CQL files - [node-priam](https://github.com/godaddy/node-priam) supports this currently, it also supports Fluent syntax for manual cql creation, and some other options for retry handling.
 * Counters are not supported by Cassie (alternative is to use Integers)
@@ -780,12 +791,12 @@ Cassie Side:
 * Not on roadmap: Connecting to multiple keyspaces (ie keyspace multi-tenancy with one app) - Can currently use a new connection and manually run CQL, but can't sync over multiple keyspaces because schemas and models are tied to a single cassie instance. Current way to deal with this is to use a separate server process (ie a different express/nodejs server process) and don't do multitenancy over multiple keyspaces in the same server process.
 
 Driver Side:
-* Paging - Cassie supports rudimentary client side paging where the token and a count is provided, but the node-cassandra-cql driver doesn't seem to have support for native paging yet (as of v0.5.0). It seems to be in node-cassandra-cql master, but not in released versions.
+* Paging - Cassie supports rudimentary client side paging where the token and a count is provided, but the node-cassandra-cql driver doesn't seem to have support for native paging yet (as of v0.5.0). It seems to be in node-cassandra-cql master on github, but not in released versions.
 * Input Streaming - not supported by node-cassandra-cql yet
 * SSL Connections - not supported by node-cassandra-cql yet
 * Auto determine other hosts - not supported by node-cassandra-cql yet
-* "Smart connections" - Only send CQL request to the hosts that contain the data (requires knowing about how the data is sharded) - this might have to be based on your Schemas
-* Possibly switch to officially supported native C/C++ driver when out of beta (would need to test performance and wrap in javascript) - https://github.com/datastax/cpp-driver
+* "Smart connections" - Only send CQL request to the hosts that contain the data (requires knowing about how the data is sharded, apparently Netflix uses something like this) - this might have to be based on your Schemas & how Cassandra is handling the sharding based on partition key
+* Possibly switch to officially supported native C/C++ driver when out of beta (would need to test performance, wrap C functions in javascript, and possibly do Javascript type to C type conversions / hinting in Cassie) - https://github.com/datastax/cpp-driver and see Apache JIRA for project
 
 Testing & Development
 ----------
@@ -801,7 +812,7 @@ Clone the repository and run the following from command line:
 
 Note: 'npm test' creates a keyspace "cassietest" on your local Cassandra server then deletes it when done.
 
-Get code coverage reports by running 'npm run test-coverage' (coverage reports will go into /coverage directory).
+Get code coverage reports by running 'npm run test-coverage' (coverage reports will go into /coverage directory - these reports are not exactly accurate because they don't take into account tests in the /readme-tests directory).
 
 Submit pull requests for any bug fixes!
 
