@@ -570,7 +570,7 @@ Cassie supports streaming results via a Query.stream(options, callback) method. 
 
 ```
 
-Timing and Debugging
+Timing, Debugging, and Logging
 ----------
 Cassie supports timing and debugging capabilities (including a prettyDebug mode which prints using colored text to a supported terminal and is far more human readable than standard debugging). These options are supported on almost all Cassie queries (timing is not supported on sync tables because it should really only be called once after preloading all your schemas). To use the options, simply pass the following object to a query as part of its options:
 
@@ -588,6 +588,13 @@ Cassie supports timing and debugging capabilities (including a prettyDebug mode 
     //var query = user.save();
     //query.exec(options, callback);
 
+```
+
+You can also pass a logger like [winston](https://github.com/flatiron/winston) in by providing the winston object in the "logger" property.
+
+```
+    var winston = require('winston');
+    var options = {debug: true, timing: true, logger: winston};
 ```
 
 Client Connections and raw queries
@@ -608,7 +615,9 @@ Client connections are handled by node-cassandra-cql. Cassie encapsulates a conn
 
 Advanced Table Creation Options
 ----------
-There are a few queries that can be efficiently executed if you use on-disk sorting of columns when creating tables. Cassie allows you to specify options for creating tables when defining your schemas. See "Data Modeling Notes" for more information on efficient client queries. See [CQL Create Table documentation](http://www.datastax.com/documentation/cql/3.1/cql/cql_reference/create_table_r.html) for advanced options (Note that Compact Storage is not supported by Cassie). See [Using Clustering Order](http://www.datastax.com/documentation/cql/3.1/cql/cql_reference/refClstrOrdr.html) for Clustering Order option.
+There are a few queries that can be efficiently executed if you use on-disk sorting of columns when creating tables. Cassie allows you to specify options for creating tables when defining your schemas. See "Data Modeling Notes" for more information on efficient client queries. See [Using Clustering Order](http://www.datastax.com/documentation/cql/3.1/cql/cql_reference/refClstrOrdr.html) for Clustering Order option. Cassie only supports the clustering order option at the moment (adding all table properties is on the roadmap, you can modify them manually currently using CQL's ALTER TABLE command).
+
+See [CQL Create Table documentation](http://www.datastax.com/documentation/cql/3.1/cql/cql_reference/create_table_r.html) and [CQL Table Properties](http://www.datastax.com/documentation/cql/3.1/cql/cql_reference/tabProp.html) for all the advanced options. 
 
 ```
 
@@ -619,9 +628,9 @@ var EventSchema = new Schema({
     },
     {
         primary: ['event_type', 'insertion_time'],
-        clustering_order: {'insertion_time', -1},
-        compression: {'sstable_compression' : 'DeflateCompressor', 'chunk_length_kb':64},
-        compaction: {'class': 'SizeTieredCompactionStrategy', 'min_threshold':6}
+        create_options: {
+            clustering_order: {'insertion_time': -1}
+        }
     });
 
 ```
@@ -656,15 +665,15 @@ By default, cassie assumes that you are developing locally and creates keyspaces
 Common Issues using Cassandra
 ----------
  
-You can't sort or use greater than or less than operators on a non-composite primary key column (see example below on what you can sort on). Primary keys can only be searched using equality or "IN". The way to get around this is to use composite primary keys with the appropriate columns. Because of this, you need to design your data models differently (full normalization is generally not a good idea, your data needs to be partially denormalized for good consistent performance - see Data modeling notes for more information).
+You can't sort or use greater than or less than operators on a non-composite primary key column (see example below on what you can sort on). Partition keys can only be searched using equality or "IN". The way to get around this is to use composite primary keys with the appropriate columns. Because of this, you need to design your data models differently (full normalization is generally not a good idea, your data needs to be partially denormalized for good consistent performance - see Data modeling notes for more information).
   
-Secondary indices are usually only good when you have fields that are common across many rows. A good example is when you have a list of people, each containing state and country information. You would put a secondary index on the state field and on the country field if you wanted to query "What users are located in this state" or "What users are located in this country". You can only use equality operators on secondary indices (see example below)
+According to some Datastax documentation, secondary indices are usually only good when you have fields that are common across many rows. A good example is when you have a list of people, each containing state and country information. You would put a secondary index on the state field and on the country field if you wanted to query "What users are located in this state" or "What users are located in this country". You can only use equality operators on secondary indices (see example below)
   
 Unlike MySQL, PostgreSQL, or other Relational Databases, you can't do JOINs across tables in Cassandra. This also means that its not a good idea to fully normalize your data (see "Data Modeling Notes". 
   
-Unlike MongoDB (or recent versions of PostgreSQL), you can't put arbitrary JSON data into Cassandra (must define a schema - although you can always add columns later). Note that you can put blobs/buffers into Cassandra, but its generally not a good idea to consistently use Blobs. Cassie relaxes schema definitions significantly by auto syncing your tables and warning you when your schema may have additional data.
+Unlike MongoDB (or recent versions of PostgreSQL), you can't put arbitrary JSON data into Cassandra (must define a schema - although you can always add columns later). Note that you can put blobs/buffers into Cassandra, but its generally not a good idea to consistently use Blobs. Cassie relaxes schema definitions significantly by auto syncing your tables and warning you when your schema may be missing columns that are defined in the database.
    
-Unlike MongoDB and Riak, Cassandra doesn't come with full text search built-in. You would need to use Apache Solr, Elastic Search, or any other full text search indexing engine to support full text search (Datastax Enterprise which is built on top of Cassandra integrates Apache Solr, you can also achieve something similar by writing an Elastic Search river that pulls data from Cassandra).
+Unlike MongoDB and Riak, Cassandra doesn't come with full text search built-in. You would need to use Apache Solr, Elastic Search, or any other full text search indexing engine to support full text search (Datastax Enterprise is built on top of Cassandra and has Apache Solr integration; you can also achieve something similar by writing an Elastic Search river that pulls data from Cassandra / is pushed data from your app or a Cassandra 2.1 Trigger). Note that with any full-text search indexing solution that is not directly tied to your primary data store, you can end up with consistency issues. The tradeoff is that by not directly tying your search indices in your database, you can scale each component separately (and deal with the consistency issue by manually pushing/pulling data into your search index).
    
 Cassandra is not a graph database like neo4j or OrientDB, but you can apparently integrate Titan with Cassandra for Graph / Geolocation type queries.
 
@@ -703,7 +712,8 @@ See Data Modeling Notes and Common Examples for how to model common use cases (O
 
 Why Cassandra
 ----------
- Cassandra provides a truly distributed, fault tolerant design (kind of like an auto-sharded, auto-replicated, master-master database). Cassandra is designed so that if any one node goes down, you can create another node, attach it to the cluster, and retrieve the "lost" data without any downtime. Cassandra provides linearly scalable reads and writes based on the number of nodes in a cluster. In other words, when you need more reads/sec or writes/sec, you can simply add another node to the cluster. This means that your database can scale automatically similarly to how your API layer can (with good data modeling practices, some initialization scripts & virtual machine tweaks of course).
+
+Cassandra provides a truly distributed, fault tolerant design (kind of like an auto-sharded, auto-replicated, master-master database). Cassandra is designed so that if any one node goes down, you can create another node, attach it to the cluster, and retrieve the "lost" data without any downtime (based on your cluster settings). Cassandra provides linearly scalable reads and writes based on the number of nodes in a cluster (and is highly optimized for write throughput). In other words, when you need more reads/sec or writes/sec, you can simply add another node to the cluster. This means that your database can scale automatically similarly to how your API layer can (with good data modeling practices, some initialization scripts & virtual machine tweaks of course).
  
  If you follow good data modeling practices, (see "Data Modeling Notes"), you can do most queries that you would normally do in SQL databases or MongoDB using just CQL (some exceptions are full-text search, graph queries, map reduce jobs - see Elastic Search / Solr for search, Titan for graph queries, Apache Spark / Hadoop for map reduce jobs).
  
@@ -760,13 +770,14 @@ Cassie Side:
 * Optional - specify table name when creating (in schema options - should automatically sync to use that tableName)
 * Additional Lightweight Transactions - specifically IF field = value (currently only supports IF NOT EXISTS clause)
 * Collections - collection modifications - (UPDATE/REMOVE in single query with IN clause is supported, but Cassie doesn't do collection manipulation yet)
-* Queries loaded from external CQL files
-* Counters are not supported by Cassie
-* Create table doesn't support options yet: Currently doesn't support properties like compression, compaction, compact storage - would need to add to options parsing for sync
-* Stream rows - node-cassandra-cql supports it, but it was failing in Cassie's tests, so its not included at the moment (stream is included though and performs a similar function)
+* Queries loaded from external CQL files - [node-priam](https://github.com/godaddy/node-priam) supports this currently, it also supports Fluent syntax for manual cql creation, and some other options for retry handling.
+* Counters are not supported by Cassie (alternative is to use Integers)
 * Change type of defined columns - should be possible, but need a translation layer between Cassandra's Java Marshaller classes and Cassie types
-* Not on roadmap: Connecting to multiple keyspaces (ie keyspace multi-tenancy with one app) - Can currently use a new connection and manually run CQL, but can't sync over multiple keyspaces because schemas and models are tied to a single cassie instance. Current way to deal with this is to use a separate server process (ie a different express/nodejs server process) and don't do multitenancy over multiple keyspaces in the same server process.
+* Stream rows - node-cassandra-cql supports it, but it was failing in Cassie's tests, so its not included at the moment (stream is included though and performs a similar function)
+* Advanced table creation options - Not currently supported by cassie (alternative is to use ALTER TABLE in cqlsh or create table manually in cqlsh)
 * Paging - Generic Paging support is not quite ready yet (to use client side paging, see "Data Modeling Notes", "Common Examples", and "Table Creation Options"). Also see driver issue below.
+
+* Not on roadmap: Connecting to multiple keyspaces (ie keyspace multi-tenancy with one app) - Can currently use a new connection and manually run CQL, but can't sync over multiple keyspaces because schemas and models are tied to a single cassie instance. Current way to deal with this is to use a separate server process (ie a different express/nodejs server process) and don't do multitenancy over multiple keyspaces in the same server process.
 
 Driver Side:
 * Paging - Cassie supports rudimentary client side paging where the token and a count is provided, but the node-cassandra-cql driver doesn't seem to have support for native paging yet (as of v0.5.0). It seems to be in node-cassandra-cql master, but not in released versions.
