@@ -290,6 +290,13 @@ When writing an application, the general idea is that you preload all your schem
 
 A final thing to note is that you can specify Keyspace replication strategy's in your Cassie config (if you let Cassie create your keyspaces for you - you can do this yourself through cqlsh, but Cassie can automate the process as well). See "Keyspace Replication Strategy and Production Notes" for more information.
 
+Table Creation Options
+----------
+
+WITH CLUSTERING
+ORDER BY
+
+
 Primary Keys
 ----------
 Cassandra requires a primary key for all column families. This means that you would need to define a primary key whenever creating a table. Cassie relaxes that restriction slightly by allowing you to define Schemas without primary keys. However, what Cassie does internally is create an 'id' field on your Schema and adds a pre-save hook to generate an id for all new models (see "Hooks" for how you can do the same with your own fields). Cassie then marks this 'id' field as your primary key. This is important to note because primary keys cannot be modified using an ALTER TABLE command. In Cassandra, once your primary key has been set for a table, you're not allowed to modify it. If you want sophisticated primary keys (like composite primary keys), you need to design your Data Model appropriately from the beginning and make sure that you define it correctly in your Schema.
@@ -599,6 +606,27 @@ Client connections are handled by node-cassandra-cql. Cassie encapsulates a conn
     
 ```
 
+Advanced Table Creation Options
+----------
+There are a few queries that can be efficiently executed if you use on-disk sorting of columns when creating tables. Cassie allows you to specify options for creating tables when defining your schemas. See "Data Modeling Notes" for more information on efficient client queries. See [CQL Create Table documentation](http://www.datastax.com/documentation/cql/3.1/cql/cql_reference/create_table_r.html) for advanced options (Note that Compact Storage is not supported by Cassie). See [Using Clustering Order](http://www.datastax.com/documentation/cql/3.1/cql/cql_reference/refClstrOrdr.html) for Clustering Order option.
+
+```
+
+var EventSchema = new Schema({
+        event_type: String,
+        insertion_time: cassie.types.Timestamp,
+        event: cassie.types.Blob
+    },
+    {
+        primary: ['event_type', 'insertion_time'],
+        clustering_order: {'insertion_time', -1},
+        compression: {'sstable_compression' : 'DeflateCompressor', 'chunk_length_kb':64},
+        compaction: {'class': 'SizeTieredCompactionStrategy', 'min_threshold':6}
+    });
+
+```
+
+
 Keyspace Replication Strategy and Production notes
 ----------
 
@@ -642,7 +670,7 @@ Cassandra is not a graph database like neo4j or OrientDB, but you can apparently
 
 Cassandra does not come with Map Reduce capabilities built in, but you can integrate with Apache Spark / Apache Hadoop for advanced Map Reduce queries / operations (Datastax Enterprise apparently comes with integrations for Hadoop).
 
-See Data Modeling Notes and Common Examples for how to model common use cases (Many-to-many modeling, pagination, etc.) and how to use Cassandra effectively.
+See Data Modeling Notes and Common Examples for how to model common use cases (One-to-many modeling, Many-to-many modeling, transactions, pagination, etc.) and how to use Cassandra effectively.
 
 ```
 
@@ -675,7 +703,9 @@ See Data Modeling Notes and Common Examples for how to model common use cases (M
 
 Why Cassandra
 ----------
-Why would you want to use Cassandra with those limitations? Cassandra provides a truly distributed, fault tolerant design (kind of like an auto-sharded, auto-replicated, master-master database). Cassandra is designed so that if any one node goes down, you can create another node, attach it to the cluster, and retrieve the "lost" data without any downtime. Cassandra provides linearly scalable reads and writes based on the number of nodes in a cluster. In other words, when you need more reads/sec or writes/sec, you can simply add another node to the cluster. This means that your database can scale automatically similarly to how your API layer can (with good data modeling practices, some initialization scripts & virtual machine tweaks of course).
+ Cassandra provides a truly distributed, fault tolerant design (kind of like an auto-sharded, auto-replicated, master-master database). Cassandra is designed so that if any one node goes down, you can create another node, attach it to the cluster, and retrieve the "lost" data without any downtime. Cassandra provides linearly scalable reads and writes based on the number of nodes in a cluster. In other words, when you need more reads/sec or writes/sec, you can simply add another node to the cluster. This means that your database can scale automatically similarly to how your API layer can (with good data modeling practices, some initialization scripts & virtual machine tweaks of course).
+ 
+ If you follow good data modeling practices, (see "Data Modeling Notes"), you can do most queries that you would normally do in SQL databases or MongoDB using just CQL (some exceptions are full-text search, graph queries, map reduce jobs - see Elastic Search / Solr for search, Titan for graph queries, Apache Spark / Hadoop for map reduce jobs).
  
  In addition, Cassandra is built with multi-datacenter support (across Wide Area Networks (WAN)).
  
@@ -688,7 +718,9 @@ Datastax has tutorials on data modeling:
 
 [Datastax Data Modeling](http://www.datastax.com/resources/data-modeling)
 
-Its highly recommended that you read at least these two tutorials on Cassandra Data Modeling before designing your models.
+In particular, see this one for common examples (One-to-many, Many-to-many, transactions): [Link](https://www.youtube.com/watch?v=px6U2n74q3g)
+
+Its highly recommended that you read at least the above video and these two tutorials on Cassandra Data Modeling before designing your models.
 
 [Cassandra Data Modeling Best Practices Part 1 - Ebay Tech Blog](http://www.ebaytechblog.com/2012/07/16/cassandra-data-modeling-best-practices-part-1/#.U7YP_Y1dU_Q)
 [Cassandra Data Modeling Best Practices Part 2 - Ebay Tech Blog](http://www.ebaytechblog.com/2012/08/14/cassandra-data-modeling-best-practices-part-2/#.U7YQGI1dU_Q)
@@ -699,6 +731,10 @@ In addition, take a look at some of Datastax's other tutorials:
 
 Common Examples
 ----------
+
+Users, Blog posts, Comments (standard example)
+
+Users and Likes
 
 Pagination Example
 
@@ -720,20 +756,20 @@ Not yet supported (on roadmap)
 ----------
 
 Cassie Side:
-* Hinting - node-cassandra-cql supports hinting (if you want to use it, use the connection provided or cassie.cql)
-* Paging - need to support some form of client side paging for common use case (I'm thinking composite primary key w/ timestamp & limit?)
-* Default - when adding a column, specify default value (in schema / sync)
+* Hinting - node-cassandra-cql supports hinting (if you need to use it, use the node-cassandra-cql connection to make your query)
 * Optional - specify table name when creating (in schema options - should automatically sync to use that tableName)
 * Additional Lightweight Transactions - specifically IF field = value (currently only supports IF NOT EXISTS clause)
-* Collections - collection modifications (UPDATE/REMOVE collection in single query with IN clause)
+* Collections - collection modifications - (UPDATE/REMOVE in single query with IN clause is supported, but Cassie doesn't do collection manipulation yet)
 * Queries loaded from external CQL files
 * Counters are not supported by Cassie
 * Create table doesn't support options yet: Currently doesn't support properties like compression, compaction, compact storage - would need to add to options parsing for sync
 * Stream rows - node-cassandra-cql supports it, but it was failing in Cassie's tests, so its not included at the moment (stream is included though and performs a similar function)
 * Change type of defined columns - should be possible, but need a translation layer between Cassandra's Java Marshaller classes and Cassie types
 * Not on roadmap: Connecting to multiple keyspaces (ie keyspace multi-tenancy with one app) - Can currently use a new connection and manually run CQL, but can't sync over multiple keyspaces because schemas and models are tied to a single cassie instance. Current way to deal with this is to use a separate server process (ie a different express/nodejs server process) and don't do multitenancy over multiple keyspaces in the same server process.
+* Paging - Generic Paging support is not quite ready yet (to use client side paging, see "Data Modeling Notes", "Common Examples", and "Table Creation Options"). Also see driver issue below.
 
 Driver Side:
+* Paging - Cassie supports rudimentary client side paging where the token and a count is provided, but the node-cassandra-cql driver doesn't seem to have support for native paging yet (as of v0.5.0). It seems to be in node-cassandra-cql master, but not in released versions.
 * Input Streaming - not supported by node-cassandra-cql yet
 * SSL Connections - not supported by node-cassandra-cql yet
 * Auto determine other hosts - not supported by node-cassandra-cql yet
@@ -761,20 +797,18 @@ Submit pull requests for any bug fixes!
 More information about Cassandra including Installation Guides, Production Setups, and Data Modeling Best Practices
 ----------
 
-For information on how to Install Cassandra on a developer Mac OS X, Linux, or Windows machine, see the [wiki](http://wiki) or Cassandra's [getting started guide](http://wiki.apache.org/cassandra/GettingStarted).
-
-In addition, for information on developer and minimal production setups (including EC2 setups), see this [wiki link](http://wiki2).
-
-For information on adding nodes, migrating data, and creating snapshots and backups, see this [wiki link](http://wiki3).
-
 For information on Cassandra, go to the [Apache Cassandra homepage](http://cassandra.apache.org/).
+
+For information on CQL, see [Cassandra 2.0 CQL Reference](http://www.datastax.com/documentation/cql/3.1/cql/cql_intro_c.html)
 
 For information on Cassandra's fault-tolerant, distributed architecture, see [the original Facebook whitepaper on Cassandra annotated with differences](http://www.datastax.com/documentation/articles/cassandra/cassandrathenandnow.html). Alternatively, also read Google's [BigTable architecture whitepaper](http://static.googleusercontent.com/media/research.google.com/en/us/archive/bigtable-osdi06.pdf) and [Amazon's Dynamo whitepaper](http://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf) as Cassandra's design was influenced by both.
 
 For helpful tips on data modeling in Cassandra (particularly if you come from a SQL background), see these links:
-[Datastax Data Modeling](http://www.datastax.com/resources/data-modeling)
-[Datastax Cassandra Tutorials](http://www.datastax.com/dev/tutorials)
-[Cassandra Data Modeling Best Practices Part 1 - Ebay Tech Blog](http://www.ebaytechblog.com/2012/07/16/cassandra-data-modeling-best-practices-part-1/#.U7YP_Y1dU_Q)
-[Cassandra Data Modeling Best Practices Part 2 - Ebay Tech Blog](http://www.ebaytechblog.com/2012/08/14/cassandra-data-modeling-best-practices-part-2/#.U7YQGI1dU_Q)
+* [Datastax Data Modeling](http://www.datastax.com/resources/data-modeling)
+* [Datastax Cassandra Tutorials](http://www.datastax.com/dev/tutorials)
+* [Cassandra Data Modeling Best Practices Part 1 - Ebay Tech Blog](http://www.ebaytechblog.com/2012/07/16/cassandra-data-modeling-best-practices-part-1/#.U7YP_Y1dU_Q)
+* [Cassandra Data Modeling Best Practices Part 2 - Ebay Tech Blog](http://www.ebaytechblog.com/2012/08/14/cassandra-data-modeling-best-practices-part-2/#.U7YQGI1dU_Q)
 
-Other databases to look at if Cassandra doesn't fit your data needs: MySQL, PostgreSQL, MongoDB, Riak, neo4j, RethinkDB, OrientDB, Hyperdex.
+Other databases to look at if Cassandra doesn't fit your data needs: MySQL, PostgreSQL, MongoDB, Riak, neo4j.
+
+Some options to use if Cassandra doesn't support your query needs: Elastic Search / Solr for search indices, Titan for graph queries, Apache Spark / Apache Hadoop for map reduce operations, Apache Storm for general distributed data processing.
