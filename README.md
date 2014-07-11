@@ -420,8 +420,18 @@ Models support plugins. Plugins allow you to share schema properties between mod
 ```
     
     //updatedAtPlugin.js
-    module.exports = exports = function updatedAtPlugin(schema, options) {
-        schema.add({updated_at: Date});
+    function updatedAtPlugin(schema, options) {
+        schema.add({updated_at: Date}); //Adds a field to the model instance
+    
+        schema.addQuery({'get': function(args, callback) {
+            console.log("Inside Model get function");
+            var results = args;
+            callback(results);
+        }});
+        //Adds a function to query by on Model class (like Model.find, Model.update, Model.remove)
+        //This can be useful when making plugins that add query logic to a Model class
+        //Example: Integrate an external data source / index in a plugin (like a search index), then add a method that will query that external data source
+        //Combining pre/post save logic and queries can allow for expressive plugins
     
         schema.pre('save', function(model) {
             model.updated_at = new Date();
@@ -430,17 +440,25 @@ Models support plugins. Plugins allow you to share schema properties between mod
         if(options && options.index) {
             schema.index('updated_at');
         }
-    };
+    }
     
     //user.js
-    var updatedAtPlugin = require('./updatedAtPlugin');
+    //var updatedAtPlugin = require('./updatedAtPlugin');
     var UserSchema = new Schema({name: String});
     UserSchema.plugin(updatedAtPlugin, {index: true});
     
     //blog.js
-    var updatedAtPlugin = require('./updatedAtPlugin');
+    //var updatedAtPlugin = require('./updatedAtPlugin');
     var BlogSchema = new Schema({title: String});
     BlogSchema.plugin(updatedAtPlugin, {index: true});
+    
+    var User = cassie.model('User', UserSchema);
+    var Blog = cassie.model('Blog', BlogSchema);
+
+    //Can now perform queries like:
+    User.get('args', function(results) {
+        console.log(results);
+    });
 
 ```
 
@@ -746,6 +764,8 @@ Its highly recommended that you view at least the above video and read these two
 
 [Cassandra Data Modeling Best Practices Part 1 - Ebay Tech Blog](http://www.ebaytechblog.com/2012/07/16/cassandra-data-modeling-best-practices-part-1/#.U7YP_Y1dU_Q)
 [Cassandra Data Modeling Best Practices Part 2 - Ebay Tech Blog](http://www.ebaytechblog.com/2012/08/14/cassandra-data-modeling-best-practices-part-2/#.U7YQGI1dU_Q)
+
+This is a powerpoint based on the above articles [Cassandra Data Modeling Best Practices](http://www.slideshare.net/jaykumarpatel/cassandra-data-modeling-best-practices).
 
 In addition, take a look at some of Datastax's other tutorials:
 
