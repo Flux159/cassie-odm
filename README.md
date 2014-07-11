@@ -395,16 +395,16 @@ Cassie supports pre-save and pre-remove hooks for its models. It also supports p
         console.log("About to save (insert or update) trick to database");
     });
     
-    TrickSchema.post('save', function (model) {
-        console.log("Saved Trick to database");
+    TrickSchema.post('save', function (model, err, results) {
+        if(!err) console.log("Saved Trick to database");
     });
     
     TrickSchema.pre('remove', function (model) {
         console.log("About to remove trick (or trick fields) from database");
     });
     
-    TrickSchema.post('remove', function (model) {
-        console.log("Removed trick (or trick fields) from database");
+    TrickSchema.post('remove', function (model, err, results) {
+        if(!err) console.log("Removed trick (or trick fields) from database");
     });
     
     cassie.model('Trick', TrickSchema);

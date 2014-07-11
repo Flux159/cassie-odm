@@ -17,13 +17,13 @@ TrickSchema.post('validate', function (model) {
 TrickSchema.pre('save', function (model) {
 });
 
-TrickSchema.post('save', function (model) {
+TrickSchema.post('save', function (model, err, results) {
 });
 
 TrickSchema.pre('remove', function (model) {
 });
 
-TrickSchema.post('remove', function (model) {
+TrickSchema.post('remove', function (model, err, results) {
 });
 
 TrickSchema.validate('name', function (model, field) {
