@@ -12,7 +12,7 @@ If you have nodejs installed, just run the following in your project's directory
     npm install cassie-odm
 ```
 
-Also note that to use any of the examples below, it is assumed that you have Cassandra downloaded and running (default port of 9042). See the [Apache Cassandra Download](http://cassandra.apache.org/download/) page for how to install Cassandra. Alternatively, get Cassandra from the [Datastax Community Distribution](http://planetcassandra.org/cassandra/).
+Also note that to use any of the examples below, it is assumed that you have Cassandra downloaded and running (default port of 9042). See the [Apache Cassandra Download](http://cassandra.apache.org/download/) page for how to install Cassandra. Alternatively, get Cassandra from the [Datastax Community Distribution](http://planetcassandra.org/cassandra/). For OSX, you can install Cassandra from homebrew (see [this](http://christopher-batey.blogspot.com/2013/05/installing-cassandra-on-mac-os-x.html)). For debian based systems (Ubuntu), you can install from apt-get.
 
 Getting Started
 ----------
@@ -115,9 +115,9 @@ Modeling is the process of defining your Schemas. Although Cassandra is a NoSQL 
 
 ```
 
-The above example shows a lot of code, but is relatively simple to understand (particularly if you've used Mongoose). First, we connect to the Cassandra server. Then, we create some schemas with cassie (along with a validator for username and a post-save hook on users). After we register the Schemas with cassie, we sync the tables to make sure that Cassandra knows that they exist (see "Sync" for more information on this and the limitations of syncing). Also note that we haven't provided a primary key in any of our schemas. In general, its good practice to explicitly define a primary key in a NoSQL database (and Cassandra requires it actually). Cassie takes care of this requirement by generating a field called 'id' if we don't specify a primary key. After we call the sync tables function, we can now create users and blogs in our database. First, we create a new user and save it. Then we create a new blog and store the query to be called with some other updates. Once we've done our updates locally, we gather the queries and send them in a batch to our Cassandra server using the cassie.batch command to create our blog post and update our user. Finally, we close the connection when we're done.
+The above example shows a lot of code, but is relatively simple to understand (particularly if you've used Mongoose). First, we connect to the Cassandra server. Then, we create some schemas with cassie (along with a validator for username and a post-save hook on users). After we register the Schemas with cassie, we sync the tables to make sure that Cassandra knows that they exist (see "Sync" for more information on this and the limitations of syncing). Also note that we haven't provided a primary key in any of our schemas. In general, its good practice to explicitly define a primary key in Cassandra (and Cassandra requires it actually). Cassie takes care of this requirement by generating a field called 'id' if we don't specify a primary key. After we call the sync tables function, we can now create users and blogs in our database. First, we create a new user and save it. Then we create a new blog and store the query to be called with some other updates. Once we've done our updates locally, we gather the queries and send them in a batch to our Cassandra server using the cassie.batch command to create our blog post and update our user. Finally, we close the connection when we're done.
 
-NOTE: All fields and should be lowercase. This is due to Cassandra's columns being lowercase (and currently Cassie doesn't automatically covert these for you in JS).
+NOTE: All fields should be lowercase. This is due to Cassandra's columns being lowercase (and currently Cassie doesn't automatically covert these for you in JS).
 
 Some things to note about the above example:
     First, all fields inside of models must be lowercase. This is because when creating fields in Cassandra through CQL, fields are stored without any uppercase letters. Second, never store a password in plain text, ideally, you would use the crypto module to generate a hash of the user's password and store that in your database. Finally, this data model is not very efficient for a number of reasons that would make more sense if you read through the "Data Modeling Notes" and Cassandra's documentation / architecture (not posting here for brevity).
@@ -129,6 +129,19 @@ Construct and run CQL queries by passing arguments or chaining methods. See the 
 CRUD (Create, Read, Update, Delete) Operations
 ----------
 Create, Read, Update, Delete operations on Models.
+
+```
+
+    //Schema used for CRUD examples:
+    
+    var FishSchema = new Schema({
+        fish_id: {type: Number, primary: true},
+        name: String
+    });
+    
+    cassie.model('Fish', FishSchema);
+
+```
 
 Create Example (INSERT):
 
@@ -242,7 +255,7 @@ Date (a timestamp)
 ObjectId (specified by cassie.types.ObjectId or cassie.types.uuid) - this is a uuid v4
 Buffer (Cassandra stores as blobs)
 Arrays (must specify internal type, like: [String])
-Maps (must specify internal types, like {String: String} - arbitrary maps are not supported, use Buffers instead)
+Maps (must specify internal types, like {String: String} - arbitrary maps are not supported, use Buffers (Blobs) instead)
 
 Sync
 ----------
@@ -255,15 +268,23 @@ Syncing cannot alter column names, so if you decide to change your column name, 
 
 Cassie cannot change the types of already defined columns. This is currently a limitation of Cassie's sync function and may be added later (see roadmap). 
 
-Cassie also cannot change the primary key for any table after it has been created. This is a limitation of Cassandra.
+Cassie also cannot change the primary key for any table after it has been created (ie you must define your schemas according to query patterns for Cassandra to be effective, see "Data Modeling Notes"). This is a limitation of Cassandra.
 
 Finally, Cassie does not delete columns or tables from your database if they aren't defined. You can pass a "warning: true" option to sync tables to tell you which columns are missing from your schemas, but Cassie will not delete the columns for you (to prevent unintended data loss). This is what "syncing forward" implies.
 
 NOTE: Make sure to read about "Keyspace Replication Strategies and Production Notes" if you intend on using Cassandra in Production. It is required to understand replication strategies for production, particularly for automated deployment setups.
 
+NOTE: Currently Cassie generates a table name by using a lowercase pluralized version of the Model name you specify (ie 'User' becomes 'users').
+
 Here is an example of using sync tables to sync two tables to the database with debugging and warning flags enabled:
 
 ```
+
+        var cassie = require('../../lib/cassie'),
+            Schema = cassie.Schema; //Require cassie module
+
+        var config = {keyspace: "CassieTest", hosts: ["127.0.0.1:9042"]};
+        cassie.connect(config); //Connect to local cassandra server
 
         //User Schema
         var UserSchema = new Schema({
@@ -286,7 +307,7 @@ Here is an example of using sync tables to sync two tables to the database with 
 
 ```
 
-When writing an application, the general idea is that you preload all your schemas into cassie, then sync your models once before running your other code (ie before starting an express application or web server). This will give you access to all your models whenever you need them by using the cassie.model('ModelName') function. An example of this process is given in the [wiki](http://wiki).
+When writing an application, the general idea is that you preload all your schemas into cassie, then sync your models once before running your other code (ie before starting an express application or web server). This will give you access to all your models whenever you need them by using the cassie.model('ModelName') function. This is similar to how Mongoose handles preloading schemas.
 
 A final thing to note is that you can specify Keyspace replication strategy's in your Cassie config (if you let Cassie create your keyspaces for you - you can do this yourself through cqlsh, but Cassie can automate the process as well). See "Keyspace Replication Strategy and Production Notes" for more information.
 
@@ -319,7 +340,7 @@ The examples below show how a primary key can be explicitly defined on a field, 
         'lname': String
     }, {primary: ['dog_id', 'fname']});
     
-    //Explicitly defining a composite primary key
+    //Explicitly defining a composite primary key and partition key (row key is based on dog_id and fname)
     var DawgSchema = new Schema({
         'dog_id': {type: Number},
         'fname': String,
@@ -327,6 +348,7 @@ The examples below show how a primary key can be explicitly defined on a field, 
     }, {primary: [['dog_id','fname'], 'lname']});
     
     //Cassie defines 'id' field for you - Note that in this case 'dog_id' is NOT the primary key, 'id' is (and 'id' is a uuid v4 type)
+    //Cassie will also add a presave function that adds the 'id' field for you before you save a new model.
     var DagSchema = new Schema({
         'dog_id': {type: Number, default: 'uuid'},
         'fname': String,
@@ -618,6 +640,8 @@ Cassie supports timing and debugging capabilities (including a prettyDebug mode 
 
 ```
 
+Note that pretty debugging should not be used for logs as it uses escaped characters to print in color (google ASCII color codes). It is primarily useful for development purposes.
+
 You can also pass a logger like [winston](https://github.com/flatiron/winston) in by providing the winston object in the "logger" property.
 
 ```
@@ -699,9 +723,9 @@ According to some Datastax documentation, secondary indices are usually only goo
   
 Unlike MySQL, PostgreSQL, or other Relational Databases, you can't do JOINs across tables in Cassandra. This also means that its not a good idea to fully normalize your data (see "Data Modeling Notes". 
   
-Unlike MongoDB (or recent versions of PostgreSQL), you can't put arbitrary JSON data into Cassandra (must define a schema - although you can always add columns later). Note that you can put blobs/buffers into Cassandra, but its generally not a good idea to consistently use Blobs. Cassie relaxes schema definitions significantly by auto syncing your tables and warning you when your schema may be missing columns that are defined in the database.
+Unlike MongoDB (or recent versions of PostgreSQL with hstore/json data types), you can't put arbitrary JSON data into Cassandra (must define a schema - although you can always add columns later). Note that you can put maps and blobs/buffers into Cassandra, but its generally not a good idea to use Blobs over 10MB according to many data modeling best practices. Also note that you could store the json as a string and handle JSON stringifying during inserts and JSON parsing during retrieval. Cassie relaxes schema definitions significantly by auto syncing your tables and warning you when your schema may be missing columns that are defined in the database. However, do note that primary keys are defined at table CREATION time and cannot be altered.
    
-Unlike MongoDB and Riak, Cassandra doesn't come with full text search built-in. You would need to use Apache Solr, Elastic Search, or any other full text search indexing engine to support full text search (Datastax Enterprise is built on top of Cassandra and has Apache Solr integration; you can also achieve something similar by writing an Elastic Search river that pulls data from Cassandra / is pushed data from your app or a Cassandra 2.1 Trigger). Note that with any full-text search indexing solution that is not directly tied to your primary data store, you can end up with consistency issues. The tradeoff is that by not directly tying your search indices in your database, you can scale each component separately (and deal with the consistency issue by manually pushing/pulling data into your search index).
+Unlike MongoDB and Riak, Cassandra doesn't come with full text search built-in. You would need to use Apache Solr, Elastic Search, or any other full text search indexing engine to support full text search (Datastax Enterprise is built on top of Cassandra and has Apache Solr integration; you can also achieve something similar by writing an Elastic Search river that pulls data from Cassandra / is pushed data from your app or a Cassandra 2.1 Trigger). Note that with any full-text search indexing solution that is not directly tied to your primary data store, you can end up with consistency issues. The tradeoff is that by not directly tying your search indices in your database, you can scale each component separately (and deal with the consistency issue by manually pushing/pulling data into your search index). With Cassie plugins, it would be possible to add a pre/post save hook to add (push data) to your search index of choice and a model method (like Model.search) to query the search index instead of Cassandra.
    
 Cassandra is not a graph database like neo4j or OrientDB, but you can apparently integrate Titan with Cassandra for Graph / Geolocation type queries.
 
@@ -774,15 +798,14 @@ Not yet supported (on roadmap)
 
 Cassie Side:
 * Hinting - node-cassandra-cql supports hinting (if you need to use it, use the node-cassandra-cql connection to make your query)
-* Optional - specify table name when creating (in schema options - should automatically sync to use that tableName)
 * Collections - collection modifications - (UPDATE/REMOVE in single query with IN clause is supported, but Cassie doesn't do collection manipulation yet)
 * Proper collection updates - list & map do not update accurately using Cassie (must manually use CQL for updates) - see [this video](https://www.youtube.com/watch?v=qphhxujn5Es) from 10-16 minutes.
-* Queries loaded from external CQL files - [node-priam](https://github.com/godaddy/node-priam) supports this currently, it also supports Fluent syntax for manual cql creation, and some other options for retry handling.
-* Counters are not supported by Cassie (alternative is to use Integers)
+* Queries loaded from external CQL files - [node-priam](https://github.com/godaddy/node-priam) supports this currently, it also supports Fluent syntax for manual cql creation, and some other options for retry handling. Since Cassie is an ODM, it will probably not have "fluent syntax" for manual cql creation, but it does support plugins and can offer similar functionality through the "addQuery" method on Schemas.
+* Counters are not supported by Cassie (alternative is to use Integers or use the node-cassandra-cql connection to manually run queries or use the addQuery method on schemas)
 * Change type of defined columns - should be possible, but need a translation layer between Cassandra's Java Marshaller classes and Cassie types
-* Stream rows - node-cassandra-cql supports it, but it was failing in Cassie's tests, so its not included at the moment (stream is included though and performs a similar function)
+* Stream rows - node-cassandra-cql supports it (connection.eachRows), but it was failing in Cassie's tests, so its not included at the moment (stream is included though and performs a similar function)
 * Advanced table creation options - Not currently supported by cassie (alternative is to use ALTER TABLE in cqlsh or create table manually in cqlsh)
-* Paging - Generic Paging support is not quite ready yet (to use client side paging, see "Data Modeling Notes", "Common Examples", and "Table Creation Options"). Also see driver issue below.
+* Paging - Generic Paging support is not quite ready yet (to use client side paging, see "Data Modeling Notes"). Also see driver issue below.
 
 * Testing Update with TTL
 * Migrating all tests to automated testing with Mocha / Istanbul (see readme-tests)
@@ -794,7 +817,7 @@ Driver Side:
 * Input Streaming - not supported by node-cassandra-cql yet
 * SSL Connections - not supported by node-cassandra-cql yet
 * Auto determine other hosts - not supported by node-cassandra-cql yet
-* "Smart connections" - Only send CQL request to the hosts that contain the data (requires knowing about how the data is sharded, apparently Netflix uses something like this) - this might have to be based on your Schemas & how Cassandra is handling the sharding based on partition key
+* "Smart connections" - Only send CQL request to the hosts that contain the data (requires knowing about how the data is sharded, apparently Netflix uses something like this) - this might have to be based on your Schemas & how Cassandra is handling the sharding based on partition key. Ideally it would be possible by querying the system keyspace in Cassandra to determine which hosts contain the relevant keys.
 * Possibly switch to officially supported native C/C++ driver when out of beta (would need to test performance, wrap C functions in javascript, and possibly do Javascript type to C type conversions / hinting in Cassie) - https://github.com/datastax/cpp-driver and see Apache JIRA for project
 
 Testing & Development
