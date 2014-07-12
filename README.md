@@ -1,6 +1,6 @@
 Cassie
 =====
-Cassie is a model layer and CQL generator written in javascript that uses the [node-cassandra-cql](https://github.com/jorgebay/node-cassandra-cql) project and attempts to mimic most of mongoose's API to allow for easy switching between MongoDB and Cassandra. Note that Cassie-ODM is not currently a full 1:1 mapping to mongoose's API (and probably will never be due to certain architectural differences between Cassandra and MongoDB).
+Cassie is a lightweight model layer and CQL generator written in javascript that uses the [node-cassandra-cql](https://github.com/jorgebay/node-cassandra-cql) project and attempts to mimic most of mongoose's API to allow for easy switching between MongoDB and Cassandra. Cassie is a small module written completely in javascript (~1200 lines according to test coverage reports for v0.1.0) and has a small dependency tree. Cassie suports data modeling, syncing tables, standard CRUD operations, Note that Cassie-ODM is not currently a full 1:1 mapping to mongoose's API (and probably will never be due to certain architectural differences between Cassandra and MongoDB).
 
 Cassie is currently in beta (as of v0.1.0). Use at your own risk in production environments.
 
@@ -12,7 +12,7 @@ If you have nodejs installed, just run the following in your project's directory
     npm install cassie-odm
 ```
 
-Also note that to use any of the examples below, it is assumed that you have Cassandra downloaded and running on the default port of 9042. Check out Cassie's [Cassandra Installation Guide](http://wiki) for how to get Cassandra for your system (specifically brew on OSX, apt-get/yum on linux, or via an installer for Windows). Alternatively see the [Apache Cassandra Download](http://cassandra.apache.org/download/) page.
+Also note that to use any of the examples below, it is assumed that you have Cassandra downloaded and running (default port of 9042). See the [Apache Cassandra Download](http://cassandra.apache.org/download/) page for how to install Cassandra. Alternatively, get Cassandra from the [Datastax Community Distribution](http://planetcassandra.org/cassandra/).
 
 Getting Started
 ----------
@@ -290,12 +290,10 @@ When writing an application, the general idea is that you preload all your schem
 
 A final thing to note is that you can specify Keyspace replication strategy's in your Cassie config (if you let Cassie create your keyspaces for you - you can do this yourself through cqlsh, but Cassie can automate the process as well). See "Keyspace Replication Strategy and Production Notes" for more information.
 
-Table Creation Options
+Table Creation Options when syncing
 ----------
 
-WITH CLUSTERING
-ORDER BY
-
+"See Advanced Table Creation Options"
 
 Primary Keys
 ----------
@@ -832,6 +830,6 @@ For helpful tips on data modeling in Cassandra (particularly if you come from a 
 * [Cassandra Data Modeling Best Practices Part 1 - Ebay Tech Blog](http://www.ebaytechblog.com/2012/07/16/cassandra-data-modeling-best-practices-part-1/#.U7YP_Y1dU_Q)
 * [Cassandra Data Modeling Best Practices Part 2 - Ebay Tech Blog](http://www.ebaytechblog.com/2012/08/14/cassandra-data-modeling-best-practices-part-2/#.U7YQGI1dU_Q)
 
-Other databases to look at if Cassandra doesn't fit your data needs: MySQL, PostgreSQL, MongoDB, Riak, neo4j.
+Other databases to look at if Cassandra doesn't fit your data needs: MySQL, PostgreSQL, MongoDB, Riak, neo4j, Oracle, Microsoft SQL Server.
 
 Some options to use if Cassandra doesn't support your query needs: Elastic Search / Solr for search indices, Titan for graph queries, Apache Spark / Apache Hadoop for map reduce operations, Apache Storm for general distributed data processing.
