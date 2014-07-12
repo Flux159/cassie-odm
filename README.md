@@ -749,8 +749,8 @@ Cassandra provides a truly distributed, fault tolerant design (kind of like an a
  
  In addition, Cassandra is built with multi-datacenter support (across Wide Area Networks (WAN)).
  
- Finally, with Cassie, you get relatively easy data modeling in nodejs that compares to the ease of use of MongoDB using Mongoose (once you understand some data modeling differences).
-
+ Also see [this](http://planetcassandra.org/what-is-apache-cassandra/).
+ 
 Data Modelling Notes
 ----------
 
@@ -758,7 +758,7 @@ Datastax has tutorials on data modeling:
 
 [Datastax Data Modeling](http://www.datastax.com/resources/data-modeling)
 
-In particular, see this one for common examples (One-to-many, Many-to-many, transactions): [Link](https://www.youtube.com/watch?v=px6U2n74q3g)
+In particular, see this one for common examples from traditional SQL Data modeling (One-to-many, Many-to-many, transactions): [Link](https://www.youtube.com/watch?v=px6U2n74q3g)
 
 Its highly recommended that you view at least the above video and read these two tutorials on Cassandra Data Modeling before designing your models.
 
@@ -771,29 +771,6 @@ In addition, take a look at some of Datastax's other tutorials:
 
 [Datastax Cassandra Tutorials](http://www.datastax.com/dev/tutorials)
 
-Common Examples
-----------
-
-Users, Blog posts, Comments (standard example)
-
-Users and Likes
-
-Pagination Example
-
-http://apmblog.compuware.com/2011/12/05/pagination-with-cassandra-and-what-we-can-learn-from-it/
-
-https://issues.apache.org/jira/browse/CASSANDRA-4415
-
-http://stackoverflow.com/questions/16951532/cassandra-pagination-how-to-use-get-slice-to-query-a-cassandra-1-2-database-fro
-
-http://www.datastax.com/dev/blog/whats-new-in-cql-3-0
-
-Common schemas / Data models in Cassandra
-
-Session Storage
-----------
-See [cassie-store](http://github.com/Flux159/cassie-store) for an express compatible session store that uses Cassie.
-
 Not yet supported (on roadmap)
 ----------
 
@@ -801,12 +778,16 @@ Cassie Side:
 * Hinting - node-cassandra-cql supports hinting (if you need to use it, use the node-cassandra-cql connection to make your query)
 * Optional - specify table name when creating (in schema options - should automatically sync to use that tableName)
 * Collections - collection modifications - (UPDATE/REMOVE in single query with IN clause is supported, but Cassie doesn't do collection manipulation yet)
+* Proper collection updates - list & map do not update accurately using Cassie (must manually use CQL for updates) - see [this video](https://www.youtube.com/watch?v=qphhxujn5Es) from 10-16 minutes.
 * Queries loaded from external CQL files - [node-priam](https://github.com/godaddy/node-priam) supports this currently, it also supports Fluent syntax for manual cql creation, and some other options for retry handling.
 * Counters are not supported by Cassie (alternative is to use Integers)
 * Change type of defined columns - should be possible, but need a translation layer between Cassandra's Java Marshaller classes and Cassie types
 * Stream rows - node-cassandra-cql supports it, but it was failing in Cassie's tests, so its not included at the moment (stream is included though and performs a similar function)
 * Advanced table creation options - Not currently supported by cassie (alternative is to use ALTER TABLE in cqlsh or create table manually in cqlsh)
 * Paging - Generic Paging support is not quite ready yet (to use client side paging, see "Data Modeling Notes", "Common Examples", and "Table Creation Options"). Also see driver issue below.
+
+* Testing Update with TTL
+* Migrating all tests to automated testing with Mocha / Istanbul (see readme-tests)
 
 * Not on roadmap: Connecting to multiple keyspaces (ie keyspace multi-tenancy with one app) - Can currently use a new connection and manually run CQL, but can't sync over multiple keyspaces because schemas and models are tied to a single cassie instance. Current way to deal with this is to use a separate server process (ie a different express/nodejs server process) and don't do multitenancy over multiple keyspaces in the same server process.
 
