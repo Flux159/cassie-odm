@@ -1,6 +1,6 @@
 Cassie
 =====
-Cassie is a lightweight model layer and CQL generator written in javascript that uses the [node-cassandra-cql](https://github.com/jorgebay/node-cassandra-cql) project and attempts to mimic most of mongoose's API to allow for easy switching between MongoDB and Cassandra. Cassie is a small module written completely in javascript (~1200 lines according to test coverage reports for v0.1.0) and has a small dependency tree. Cassie suports data modeling, syncing tables, standard CRUD operations, Note that Cassie-ODM is not currently a full 1:1 mapping to mongoose's API (and probably will never be due to certain architectural differences between Cassandra and MongoDB).
+Cassie is a lightweight model layer and CQL generator written in javascript that uses the [node-cassandra-cql](https://github.com/jorgebay/node-cassandra-cql) project and attempts to mimic most of mongoose's API to allow for easy switching between MongoDB and Cassandra. Cassie is a small module written completely in javascript (~1200 lines according to test coverage reports for v0.1.0) and has a small dependency tree. Cassie supports data modeling, syncing tables, standard CRUD operations, Validations, Hooks, Plugins, Lightweight Transactions, Time to Live queries, batching, streaming queries, timing, and debugging queries (with 'pretty debugging' for supported terminals). Note that Cassie-ODM is not currently a full 1:1 mapping to mongoose's API.
 
 Cassie is currently in beta (as of v0.1.0). Use at your own risk in production environments.
 
@@ -117,7 +117,7 @@ Modeling is the process of defining your Schemas. Although Cassandra is a NoSQL 
 
 The above example shows a lot of code, but is relatively simple to understand (particularly if you've used Mongoose). First, we connect to the Cassandra server. Then, we create some schemas with cassie (along with a validator for username and a post-save hook on users). After we register the Schemas with cassie, we sync the tables to make sure that Cassandra knows that they exist (see "Sync" for more information on this and the limitations of syncing). Also note that we haven't provided a primary key in any of our schemas. In general, its good practice to explicitly define a primary key in Cassandra (and Cassandra requires it actually). Cassie takes care of this requirement by generating a field called 'id' if we don't specify a primary key. After we call the sync tables function, we can now create users and blogs in our database. First, we create a new user and save it. Then we create a new blog and store the query to be called with some other updates. Once we've done our updates locally, we gather the queries and send them in a batch to our Cassandra server using the cassie.batch command to create our blog post and update our user. Finally, we close the connection when we're done.
 
-NOTE: All fields should be lowercase. This is due to Cassandra's columns being lowercase (and currently Cassie doesn't automatically covert these for you in JS).
+NOTE: All fields should be lowercase. This is due to Cassandra's columns being lowercase (and currently Cassie doesn't automatically covert these for you in javascript).
 
 Some things to note about the above example:
     First, all fields inside of models must be lowercase. This is because when creating fields in Cassandra through CQL, fields are stored without any uppercase letters. Second, never store a password in plain text, ideally, you would use the crypto module to generate a hash of the user's password and store that in your database. Finally, this data model is not very efficient for a number of reasons that would make more sense if you read through the "Data Modeling Notes" and Cassandra's documentation / architecture (not posting here for brevity).
@@ -807,8 +807,13 @@ Cassie Side:
 * Advanced table creation options - Not currently supported by cassie (alternative is to use ALTER TABLE in cqlsh or create table manually in cqlsh)
 * Paging - Generic Paging support is not quite ready yet (to use client side paging, see "Data Modeling Notes"). Also see driver issue below.
 
+Plugins / Other useful functionality (separate repos, build on top of cassie or as cassie-plugins):
+* Elastic Search Plugin (cassie-elastic-search-plugin) - for async pushing of Cassie models to elastic search index and querying said index (note can lead to consistency issues if push to elastic search fails in a post-save scenario)
+* Sessions (connect-cassie) - Create CassieStore to store user sessions
+* Easy Performance Testing - Expand timing, debugging and modeling to support quick testing of query performance on test clusters to simulate real client load
+
 * Testing Update with TTL
-* Migrating all tests to automated testing with Mocha / Istanbul (see readme-tests)
+* Migrating all tests to automated testing with Mocha / Istanbul (see readme-tests directory)
 
 * Not on roadmap: Connecting to multiple keyspaces (ie keyspace multi-tenancy with one app) - Can currently use a new connection and manually run CQL, but can't sync over multiple keyspaces because schemas and models are tied to a single cassie instance. Current way to deal with this is to use a separate server process (ie a different express/nodejs server process) and don't do multitenancy over multiple keyspaces in the same server process.
 
@@ -817,8 +822,8 @@ Driver Side:
 * Input Streaming - not supported by node-cassandra-cql yet
 * SSL Connections - not supported by node-cassandra-cql yet
 * Auto determine other hosts - not supported by node-cassandra-cql yet
-* "Smart connections" - Only send CQL request to the hosts that contain the data (requires knowing about how the data is sharded, apparently Netflix uses something like this) - this might have to be based on your Schemas & how Cassandra is handling the sharding based on partition key. Ideally it would be possible by querying the system keyspace in Cassandra to determine which hosts contain the relevant keys.
-* Possibly switch to officially supported native C/C++ driver when out of beta (would need to test performance, wrap C functions in javascript, and possibly do Javascript type to C type conversions / hinting in Cassie) - https://github.com/datastax/cpp-driver and see Apache JIRA for project
+* "Smart connections" - Only send CQL request to the hosts that contain the data (requires knowing about how the data is sharded, apparently Netflix uses something like this) - this might have to be based on your Schemas & how Cassandra is handling the sharding based on partition key. Naive Hypothesis: It might be possible by querying the system keyspace in Cassandra to determine which hosts contain the relevant shard keys periodically.
+* Possibly switch to officially supported native C/C++ driver when out of beta (would need to test performance, wrap C functions in javascript, and possibly do Javascript type to C type conversions / hinting in Cassie) - [https://github.com/datastax/cpp-driver](https://github.com/datastax/cpp-driver) and see Apache JIRA for project (note that this would mean making a node module like hiredis that compiles C/C++ code on multiple platforms)
 
 Testing & Development
 ----------
@@ -834,9 +839,9 @@ Clone the repository and run the following from command line:
 
 Note: 'npm test' creates a keyspace "cassietest" on your local Cassandra server then deletes it when done.
 
-Get code coverage reports by running 'npm run test-coverage' (coverage reports will go into /coverage directory - these reports are not exactly accurate because they don't take into account tests in the /readme-tests directory).
+Get code coverage reports by running 'npm run test-coverage' (coverage reports will go into /coverage directory - these reports are not exactly accurate because they don't take into account tests in the /readme-tests directory - see roadmap).
 
-Submit pull requests for any bug fixes!
+Submit pull requests for any bug fixes and add issues if you encounter them!
 
 More information about Cassandra including Installation Guides, Production Setups, and Data Modeling Best Practices
 ----------
@@ -856,3 +861,16 @@ For helpful tips on data modeling in Cassandra (particularly if you come from a 
 Other databases to look at if Cassandra doesn't fit your data needs: MySQL, PostgreSQL, MongoDB, Riak, neo4j, Oracle, Microsoft SQL Server.
 
 Some options to use if Cassandra doesn't support your query needs: Elastic Search / Solr for search indices, Titan for graph queries, Apache Spark / Apache Hadoop for map reduce operations, Apache Storm for general distributed data processing.
+
+LICENSE
+---------
+
+The MIT License
+
+Copyright (c) 2014 Suyog Sonwalkar <flux159@gmail.com>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
