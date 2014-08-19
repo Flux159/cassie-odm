@@ -61,7 +61,7 @@ Modeling is the process of defining your Schemas. Although Cassandra is a NoSQL 
     //Adds a validator for username
     UserSchema.validate('username', function (user) {
         return (user.username !== null);
-    });
+    }, "Username cannot be empty.");
 
     //Add a post-save hook
     UserSchema.post('save', function (model) {
@@ -387,7 +387,7 @@ Validations are a core part of Cassie's Object Data Model. Validations allow you
     //Adding a custom validation to 'lname'
     DogSchema.validate('lname', function(model, fieldKey) {
         return (model[fieldKey] === 'doge');
-    });
+    }, "Last name is required.");
 
     //A validate function is passed the model and the fieldKey to validate. It returns true or false.
     //The validation function above requires that 'lname' is equal to 'doge' for all models

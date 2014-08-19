@@ -18,7 +18,7 @@ var DogSchema = new Schema({
 //Adding a custom validation to 'lname'
 DogSchema.validate('lname', function(model, fieldKey) {
     return (model[fieldKey] === 'doge');
-});
+}, "Last name is required.");
 
 //A validate function is passed the model and the fieldKey to validate. It returns true or false.
 //The validation function above requires that 'lname' is equal to 'doge' for all models
