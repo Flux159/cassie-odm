@@ -802,6 +802,7 @@ Cassie Side:
 * Proper collection updates - list & map do not update accurately using Cassie (must manually use CQL for updates) - see [this video](https://www.youtube.com/watch?v=qphhxujn5Es) from 10-16 minutes.
 * Queries loaded from external CQL files - [node-priam](https://github.com/godaddy/node-priam) supports this currently, it also supports Fluent syntax for manual cql creation, and some other options for retry handling. Since Cassie is an ODM, it will probably not have "fluent syntax" for manual cql creation, but it does support plugins and can offer similar functionality through the "addQuery" method on Schemas.
 * Counters are not supported by Cassie (alternative is to use Integers or use the node-cassandra-cql connection to manually run queries or use the addQuery method on schemas)
+* Select COUNT(*) is not currently supported by Cassie (use raw cql query)
 * Change type of defined columns - should be possible, but need a translation layer between Cassandra's Java Marshaller classes and Cassie types
 * Stream rows - node-cassandra-cql supports it (connection.eachRows), but it was failing in Cassie's tests, so its not included at the moment (stream is included though and performs a similar function)
 * Advanced table creation options - Not currently supported by cassie (alternative is to use ALTER TABLE in cqlsh or create table manually in cqlsh)
