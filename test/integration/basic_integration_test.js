@@ -3,7 +3,7 @@ var assert = require('assert');
 var cassie = require('../../lib/cassie'),
     Schema = cassie.Schema;
 
-var connectOptions = {hosts: ["127.0.0.1:9042"], keyspace: "CassieTest"};
+var connectOptions = {hosts: ["127.0.0.1"], keyspace: "test"};
 cassie.connect(connectOptions);
 
 var TrickSchema = new Schema({'name': {type: String, index: true}});
@@ -53,11 +53,13 @@ after(function (done) {
     });
 });
 
+var options = {debug: true, prettyDebug: true};
+
 describe('Basic', function () {
 
     before(function (done) {
-        var options = {};
-//        var options = {debug: true, prettyDebug: true};
+//        var options = {};
+        var options = {debug: true, prettyDebug: true};
         cassie.syncTables(connectOptions, options, function (err, results) {
             done();
         });
@@ -70,7 +72,7 @@ describe('Basic', function () {
             var trick = new Trick({name: 'illusion'});
 
             trick.save(function (err) {
-                Trick.find({id: trick.id}, function (err, results) {
+                Trick.find({id: trick.id}, options, function (err, results) {
 
                     ids.push(trick.id);
 

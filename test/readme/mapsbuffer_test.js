@@ -7,7 +7,7 @@ describe('Maps Buffer', function() {
     it('should not fail', function (done) {
 
         var cassie = require('../../lib/cassie');
-        var config = {keyspace: "CassieTest", hosts: ["127.0.0.1:9042"]};
+        var config = {keyspace: "CassieTest", hosts: ["127.0.0.1"]};
         cassie.connect(config);
 
         var MapsBuffer = new cassie.Schema({name: String, specialmap: {type: {String: String}, buff: cassie.types.Buffer}});

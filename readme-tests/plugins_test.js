@@ -4,7 +4,7 @@ var assert = require('assert');
 var cassie = require('../lib/cassie'),
     Schema = cassie.Schema;
 
-var connectOptions = {hosts: ["127.0.0.1:9042"], keyspace: "CassieTest"};
+var connectOptions = {hosts: ["127.0.0.1"], keyspace: "CassieTest"};
 cassie.connect(connectOptions);
 
 //updatedAtPlugin.js
