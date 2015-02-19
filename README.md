@@ -165,10 +165,23 @@ Read Example (SELECT):
     var Fish = cassie.model('Fish');
 
     Fish.find({fish_id: {$in: [2000, 2001, 2002, 2003, 2004]}}).exec(function(err, fishes) {
+				//Note: fishes is an array
         console.log(fishes.toString());
         var firstFish = fishes[0]; //...
     });
 
+
+```
+
+Read Example 2 (SELECT LIMIT 1 - findOne):
+
+```javascript
+	var Fish = cassie.model('Fish');
+
+	Fish.findOne({fish_id: 2000}, function(err, fish) {
+			//Note: fish is a single object
+			console.log(fish.toString());
+	});
 
 ```
 
