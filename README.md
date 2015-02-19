@@ -16,7 +16,7 @@ Also note that to use any of the examples below, it is assumed that you have Cas
 
 Getting Started
 ----------
-```
+```javascript
 
     var cassie = require('cassie-odm');
     var config = {keyspace: "CassieTest", hosts: ["127.0.0.1:9042"]};
@@ -43,7 +43,7 @@ Modeling
 ---------
 Modeling is the process of defining your Schemas. Although Cassandra is a NoSQL database, it is required to make a column family with a primary key. Cassie makes this process easier by helping you organize your code by defining Schemas in a single location (for easy reference). If you do not specify a primary key, Cassie will automatically generate an 'id' key for you. Modeling also allows you to perform validations and apply pre and post hooks to your models. Finally, Cassie will actually sync your tables forward to make rapid development easier ( tables and fields that don't exist in Cassandra will be created. Cassie does not delete tables or fields as this could lead to data loss. Cassie can warn you if there are unused fields though, see the "Sync" section for more information).
 
-```
+```javascript
 
     var cassie = require('cassie-odm'),
         Schema = cassie.Schema; //Require cassie module
@@ -130,7 +130,7 @@ CRUD (Create, Read, Update, Delete) Operations
 ----------
 Create, Read, Update, Delete operations on Models.
 
-```
+```javascript
 
     //Schema used for CRUD examples:
     
@@ -145,7 +145,7 @@ Create, Read, Update, Delete operations on Models.
 
 Create Example (INSERT):
 
-```
+```javascript
 
     //Create Example (assuming schemas have been defined and sync'ed - see sync for more information)
     var Fish = cassie.model('Fish');
@@ -159,7 +159,7 @@ Create Example (INSERT):
 
 Read Example (SELECT):
 
-```
+```javascript
 
     //Read Example (assuming schemas have been defined & sync'ed - see sync for more information)
     var Fish = cassie.model('Fish');
@@ -175,7 +175,7 @@ Read Example (SELECT):
 Update Example (UPDATE):
 Note: Cassie internally stores a flag to know when you've modified fields - for arrays and maps, you must specified that a field has been modified using the Model.markModified('fieldName'); method though (see 'Modeling' for an example)
 
-```
+```javascript
 
     //Update Example (assuming schemas have been defined & sync'ed - see sync for more information)
 
@@ -209,7 +209,7 @@ Note: Cassie internally stores a flag to know when you've modified fields - for 
 
 Delete Example (DELETE):
 
-```
+```javascript
 
     //Delete Example (assuming schemas have been defined & sync'ed - see sync for more information)
 
@@ -278,7 +278,7 @@ NOTE: Currently Cassie generates a table name by using a lowercase pluralized ve
 
 Here is an example of using sync tables to sync two tables to the database with debugging and warning flags enabled:
 
-```
+```javascript
 
         var cassie = require('../../lib/cassie'),
             Schema = cassie.Schema; //Require cassie module
@@ -324,7 +324,7 @@ Cassandra requires a primary key for all column families. This means that you wo
 
 The examples below show how a primary key can be explicitly defined on a field, how a composite primary key can be defined, and how to allow Cassie to generate a primary key for you:
 
-```
+```javascript
 
     //Explicitly defining a primary key
     var DogSchema = new Schema({
@@ -361,6 +361,7 @@ Secondary Indexing
 ----------
 Cassie supports secondary indexes on fields with the following option {index: true}. See the example below:
 
+```javascript
     //Explicitly defining a primary key and defining a secondary index
     var DogSchema = new Schema({
         'dog_id': {type: Number, primary: true},
@@ -370,12 +371,13 @@ Cassie supports secondary indexes on fields with the following option {index: tr
     
     //Alternative way of defining a secondary index
     DogSchema.index('lname');
+```
 
 Validations
 ----------
 Validations are a core part of Cassie's Object Data Model. Validations allow you to easily reject inserts and updates across all your models in javascript without ever hitting your database. Cassie comes with internal support for a "required" validation and also allows you to validate any field with a custom function.
 
-```
+```javascript
 
     //Requiring that 'fname' is provided (is not null)
     var DogSchema = new Schema({
@@ -399,7 +401,7 @@ Hooks
 
 Cassie supports pre-save and pre-remove hooks for its models. It also supports post-init, post-validate, post-save, and post-remove hooks. The example below shows all of these being used.
 
-```
+```javascript
 
     var TrickSchema = new Schema({'name': {type: String, index: true}});
     
@@ -437,7 +439,7 @@ Plugins
 ----------
 Models support plugins. Plugins allow you to share schema properties between models and allow for pre-save hooks, validations, indexes, pretty much anything you can do with a Schema. Note that you can't modify primary keys or add primary keys in a plugin.
 
-```
+```javascript
     
     //updatedAtPlugin.js
     function updatedAtPlugin(schema, options) {
@@ -489,7 +491,7 @@ Cassie supports lightweight transactions for saving new data via the {if_not_exi
 
 For updating data, you can use the IF field = 'value' CQL command by passing {if: {field: value}} as an option to save.
 
-```
+```javascript
 
     var User = cassie.model('User');
     
@@ -519,7 +521,7 @@ Time to Live (TTL)
 ----------
 Cassie supports specifying a TTL when inserting data via the {ttl: Number} option, where Number is the time in seconds. Also see "Sessions".
 
-```
+```javascript
 
     var Post = cassie.model('Post');
     
@@ -535,7 +537,7 @@ Limit & Sorting
 ----------
 Cassie can limit your queries based on options or by chaining queries. See the examples below:
 
-```
+```javascript
 
     var User = cassie.model('User');
     
@@ -555,7 +557,7 @@ Batching
 ----------
 Cassie can batch queries together to run at once. This is done by not specifying a callback to an insert or delete function and passing an array of queries to cassie.batch(). See the example below:
 
-```
+```javascript
 
     var new_user_1 = new User({user_id: 1000, name: 'Bob'});
     var new_user_2 = new User({user_id: 2000, name: 'Steve'});
@@ -576,7 +578,7 @@ Execute Prepared
 ----------
 Cassie can execute prepared queries by passing in a "prepared" option when calling exec (either through a callback or through Query.exec() directly). See the examples below:
 
-```
+```javascript
 
     var User = cassie.model('User');
     
@@ -596,7 +598,7 @@ Streaming
 ----------
 Cassie supports streaming results via a Query.stream(options, callback) method. This returns a readable stream (can view documentation for node-cassandra-cql streams as well). See the example below:
 
-```
+```javascript
 
     var User = cassie.model('User');
     
@@ -624,7 +626,7 @@ Timing, Debugging, and Logging
 ----------
 Cassie supports timing and debugging capabilities (including a prettyDebug mode which prints using colored text to a supported terminal and is far more human readable than standard debugging). These options are supported on almost all Cassie queries (timing is not supported on sync tables because it should really only be called once after preloading all your schemas). To use the options, simply pass the following object to a query as part of its options:
 
-```
+```javascript
 
     var options = {debug: true, timing: true, prettyDebug: true};
     
@@ -644,7 +646,7 @@ Note that pretty debugging should not be used for logs as it uses escaped charac
 
 You can also pass a logger like [winston](https://github.com/flatiron/winston) in by providing the winston object in the "logger" property.
 
-```
+```javascript
     var winston = require('winston');
     var options = {debug: true, timing: true, logger: winston};
 ```
@@ -653,7 +655,7 @@ Client Connections and raw queries
 ----------
 Client connections are handled by node-cassandra-cql. Cassie encapsulates a connection internally, but you can also use the node-cassandra-cql connection directly for CQL queries:
 
-```
+```javascript
 
     var cassie = require('cassie-odm');
     var connection = cassie.connect({keyspace: "mykeyspace", hosts: ["127.0.0.1:9042"]});
@@ -671,7 +673,7 @@ There are a few queries that can be efficiently executed if you use on-disk sort
 
 See [CQL Create Table documentation](http://www.datastax.com/documentation/cql/3.1/cql/cql_reference/create_table_r.html) and [CQL Table Properties](http://www.datastax.com/documentation/cql/3.1/cql/cql_reference/tabProp.html) for all the advanced options. 
 
-```
+```javascript
 
 var EventSchema = new Schema({
         event_type: String,
@@ -693,7 +695,7 @@ Keyspace Replication Strategy and Production notes
 
 By default, cassie assumes that you are developing locally and creates keyspaces with a "Simple Replication Strategy" and a replication factor of 1. This is not ideal for a production setup. A production Cassandra cluster will generally have a minimum of 3 nodes, a "Network Topology Replication Strategy" and a replication factor of 3. What this means is that you have 3 instances of Cassandra running (generally on separate servers). This allows you to survive the loss of one of the servers without losing your data (and once a third node is added back, Cassandra will automatically populate the node with the data it needs). Since cassie can create keyspaces, it needs to know what strategy to use when creating the keyspace. It does this by checking for options in your connection configuration. Specifically, it checks for a field "replication" that contains an object with the replication options. See the example below for the default setting and for a standard "Network Topology with replication factor of 3" setting.
 
-```
+```javascript
 
     //Standard setting (passed to cassie)
     config {
@@ -733,7 +735,7 @@ Cassandra does not come with Map Reduce capabilities built in, but you can integ
 
 See Data Modeling Notes and Common Examples for how to model common use cases (One-to-many modeling, Many-to-many modeling, transactions, pagination, etc.) and how to use Cassandra effectively.
 
-```
+```javascript
 
     //Can't sort on name
     var UserSchema = new Schema({user_id: Number, name: String}, {primary: ['user_id']});
