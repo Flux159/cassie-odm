@@ -59,7 +59,7 @@ describe('Basic', function () {
         var options = {};
 //        var options = {debug: true, prettyDebug: true};
         cassie.syncTables(connectOptions, options, function (err, results) {
-            done();
+            done(err);
         });
     });
 
@@ -158,7 +158,7 @@ describe('Basic', function () {
                     Trick.find({id: trick.id}, function(err, results) {
 
                         assert(results[0].name === 'test');
-                        assert(results[0].id === trick.id);
+                        assert(results[0].id.toString() === trick.id.toString());
 
                         done();
                     });
