@@ -2,7 +2,7 @@
   "author": "Suyog Sonwalkar",
   "name": "cassie-odm",
   "description": "ODM (Object Data Model) for Cassandra that uses node-cassandra-cql",
-  "version": "0.1.6",
+  "version": "0.2.0",
   "keywords": [
     "cassandra",
     "odm",
@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "async": "0.9.0",
-    "cassandra-driver": "^3.1.1",
+    "cassandra-driver": "3.1.1",
     "long": "2.2.5",
     "node-uuid": "1.4.1",
     "pluralize": "0.0.10"
