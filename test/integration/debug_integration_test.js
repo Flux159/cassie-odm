@@ -19,8 +19,8 @@ describe('Sync', function () {
                 var newCatSchema = new cassie.Schema({name: String, breed: String});
                 var Cat = cassie.model('Cat', newCatSchema);
 
-                cassie.syncTables(config, options, function () {
-                    done();
+                cassie.syncTables(config, options, function (err) {
+                    done(err);
                 });
 
             });
@@ -57,7 +57,7 @@ describe('Sync', function () {
                             var query2 = kitten2.remove();
 
                             cassie.batch([query1, query2], {debug: true, prettyDebug:true, timing: true}, function(err) {
-                                done();
+                                done(err);
                             });
                         });
                     });
