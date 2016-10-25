@@ -546,7 +546,7 @@ Cassie supports specifying a TTL when inserting data via the {ttl: Number} optio
 
 ```
 
-Limit & Sorting
+Limiting
 ----------
 Cassie can limit your queries based on options or by chaining queries. See the examples below:
 
@@ -554,15 +554,16 @@ Cassie can limit your queries based on options or by chaining queries. See the e
 
     var User = cassie.model('User');
     
-    User.find({}, {limit: 10, sort: {name: 1}}, function(err, users) {
+    User.find({}, {limit: 10, function(err, users) {
         console.log(users.toString());
     });
     
     //Same query as above using chaining
-    User.find({}).limit(10).sort({name: 1}).exec(function(err, users) {
+    User.find({}).limit(10).exec(function(err, users) {
         console.log(users.toString());
     });
     
+Note that Cassandra sorts your columns based on the clustering key specified during table creation.
 
 ```
 

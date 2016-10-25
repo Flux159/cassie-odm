@@ -24,11 +24,11 @@ cassie.deleteKeyspace(connectOptions, options, function(err) {
             console.log(err);
             //Handle errors, etc.
 
-            User.find({user_id: [2000, 2001, 2002, 2003]}, {limit: 10, sort: {name: 1}, debug: true, prettyDebug: true}, function(err, users) {
+            User.find({user_id: [2000, 2001, 2002, 2003]}, {limit: 10, debug: true, prettyDebug: true}, function(err, users) {
                 console.log(users.toString());
 
                 //Same query as above using chaining
-                User.find({user_id: [2000, 2001, 2002, 2003]}).limit(10).sort({name: 1}).exec({debug: true, prettyDebug:true}, function(err, users) {
+                User.find({user_id: [2000, 2001, 2002, 2003]}).limit(10).exec({debug: true, prettyDebug:true}, function(err, users) {
                     console.log(users.toString());
 
                     cassie.close();
