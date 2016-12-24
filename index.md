@@ -1,8 +1,8 @@
 Cassie
 =====
-Cassie is a lightweight model layer and CQL generator written in javascript that uses the [node-cassandra-cql](https://github.com/jorgebay/node-cassandra-cql) project and attempts to mimic most of mongoose's API to allow for relatively easy switching between MongoDB and Cassandra. Cassie is a small module written completely in javascript and has a small dependency tree. Cassie supports data modeling, syncing tables, standard CRUD operations, Validations, Hooks, Plugins, Lightweight Transactions, Time to Live queries, batching, streaming queries, timing, and debugging queries (with 'pretty debugging' for supported terminals). Note that Cassie-ODM is not currently a full 1:1 mapping to mongoose's API.
+Cassie is a lightweight model layer and CQL generator written in javascript that uses the [cassandra-driver](https://github.com/datastax/nodejs-driver) project and attempts to mimic most of mongoose's API to allow for relatively easy switching between MongoDB and Cassandra. Cassie is a small module written completely in javascript and has a small dependency tree. Cassie supports data modeling, syncing tables, standard CRUD operations, Validations, Hooks, Plugins, Lightweight Transactions, Time to Live queries, batching, streaming queries, timing, and debugging queries (with 'pretty debugging' for supported terminals). Note that Cassie-ODM is not currently a full 1:1 mapping to mongoose's API.
 
-Cassie is currently in beta (as of v0.1.0). Use at your own risk in production environments.
+Cassie is currently in beta (as of v0.2.2). Use at your own risk in production environments.
 
 Installing
 ----------
@@ -546,7 +546,7 @@ Cassie supports specifying a TTL when inserting data via the {ttl: Number} optio
 
 ```
 
-Limit & Sorting
+Limiting
 ----------
 Cassie can limit your queries based on options or by chaining queries. See the examples below:
 
@@ -554,15 +554,16 @@ Cassie can limit your queries based on options or by chaining queries. See the e
 
     var User = cassie.model('User');
     
-    User.find({}, {limit: 10, sort: {name: 1}}, function(err, users) {
+    User.find({}, {limit: 10, function(err, users) {
         console.log(users.toString());
     });
     
     //Same query as above using chaining
-    User.find({}).limit(10).sort({name: 1}).exec(function(err, users) {
+    User.find({}).limit(10).exec(function(err, users) {
         console.log(users.toString());
     });
     
+Note that Cassandra sorts your columns based on the clustering key specified during table creation.
 
 ```
 
@@ -609,7 +610,7 @@ Cassie can execute prepared queries by passing in a "prepared" option when calli
 
 Streaming
 ----------
-Cassie supports streaming results via a Query.stream(options, callback) method. This returns a readable stream (can view documentation for node-cassandra-cql streams as well). See the example below:
+Cassie supports streaming results via a Query.stream(options, callback) method. This returns a readable stream (can view documentation for cassandra-driver streams as well). See the example below:
 
 ```javascript
 
@@ -666,7 +667,7 @@ You can also pass a logger like [winston](https://github.com/flatiron/winston) i
 
 Client Connections and raw queries
 ----------
-Client connections are handled by node-cassandra-cql. Cassie encapsulates a connection internally, but you can also use the node-cassandra-cql connection directly for CQL queries:
+Client connections are handled by node-cassandra-cql. Cassie encapsulates a connection internally, but you can also use the cassandra-driver connection directly for CQL queries:
 
 ```javascript
 
@@ -812,14 +813,13 @@ Not yet supported (on roadmap)
 ----------
 
 Cassie Side:
-* Hinting - node-cassandra-cql supports hinting (if you need to use it, use the node-cassandra-cql connection to make your query)
 * Collections - collection modifications - (UPDATE/REMOVE in single query with IN clause is supported, but Cassie doesn't do collection manipulation yet)
 * Proper collection updates - list & map do not update accurately using Cassie (must manually use CQL for updates) - see [this video](https://www.youtube.com/watch?v=qphhxujn5Es) from 10-16 minutes.
 * Queries loaded from external CQL files - [node-priam](https://github.com/godaddy/node-priam) supports this currently, it also supports Fluent syntax for manual cql creation, and some other options for retry handling. Since Cassie is an ODM, it will probably not have "fluent syntax" for manual cql creation, but it does support plugins and can offer similar functionality through the "addQuery" method on Schemas.
-* Counters are not supported by Cassie (alternative is to use Integers or use the node-cassandra-cql connection to manually run queries or use the addQuery method on schemas)
+* Counters are not supported by Cassie (alternative is to use Integers or use the cassandra-driver connection to manually run queries or use the addQuery method on schemas)
 * Select COUNT(*) is not currently supported by Cassie (use raw cql query)
 * Change type of defined columns - should be possible, but need a translation layer between Cassandra's Java Marshaller classes and Cassie types
-* Stream rows - node-cassandra-cql supports it (connection.eachRows), but it was failing in Cassie's tests, so its not included at the moment (stream is included though and performs a similar function)
+* Stream rows - cassandra-driver supports it (connection.eachRows), but it was failing in Cassie's tests, so its not included at the moment (stream is included though and performs a similar function)
 * Advanced table creation options - Not currently supported by cassie (alternative is to use ALTER TABLE in cqlsh or create table manually in cqlsh)
 * Paging - Generic Paging support is not quite ready yet (to use client side paging, see "Data Modeling Notes"). Also see driver issue below.
 
@@ -834,12 +834,11 @@ Plugins / Other useful functionality (separate repos, build on top of cassie or 
 * Not on roadmap: Connecting to multiple keyspaces (ie keyspace multi-tenancy with one app) - Can currently use a new connection and manually run CQL, but can't sync over multiple keyspaces because schemas and models are tied to a single cassie instance. Current way to deal with this is to use a separate server process (ie a different express/nodejs server process) and don't do multitenancy over multiple keyspaces in the same server process.
 
 Driver Side:
-* Paging - Cassie supports rudimentary client side paging where the token and a count is provided, but the node-cassandra-cql driver doesn't seem to have support for native paging yet (as of v0.5.0). It seems to be in node-cassandra-cql master on github, but not in released versions.
-* Input Streaming - not supported by node-cassandra-cql yet
-* SSL Connections - not supported by node-cassandra-cql yet
-* Auto determine other hosts - not supported by node-cassandra-cql yet
+* Paging - Cassie supports rudimentary client side paging where the token and a count is provided, but cassandra-driver should provide native paging
+* Input Streaming
+* SSL Connections
+* Auto determine other hosts
 * "Smart connections" - Only send CQL request to the hosts that contain the data (requires knowing about how the data is sharded, apparently Netflix uses something like this) - this might have to be based on your Schemas & how Cassandra is handling the sharding based on partition key. Naive Hypothesis: It might be possible by querying the system keyspace in Cassandra to determine which hosts contain the relevant shard keys periodically.
-* Possibly switch to officially supported native C/C++ driver when out of beta (would need to test performance, wrap C functions in javascript, and possibly do Javascript type to C type conversions / hinting in Cassie) - [https://github.com/datastax/cpp-driver](https://github.com/datastax/cpp-driver) and see Apache JIRA for project (note that this would mean making a node module like hiredis that compiles C/C++ code on multiple platforms)
 
 Testing & Development
 ----------
@@ -864,7 +863,7 @@ More information about Cassandra including Installation Guides, Production Setup
 
 For information on Cassandra, go to the [Apache Cassandra homepage](http://cassandra.apache.org/).
 
-For information on CQL, see [Cassandra 2.0 CQL Reference](http://www.datastax.com/documentation/cql/3.1/cql/cql_intro_c.html)
+For information on CQL, see [Cassandra 3.1 CQL Reference](https://docs.datastax.com/en/cql/3.1/cql/cql_reference/cqlReferenceTOC.html)
 
 For information on Cassandra's fault-tolerant, distributed architecture, see [the original Facebook whitepaper on Cassandra annotated with differences](http://www.datastax.com/documentation/articles/cassandra/cassandrathenandnow.html). Alternatively, also read Google's [BigTable architecture whitepaper](http://static.googleusercontent.com/media/research.google.com/en/us/archive/bigtable-osdi06.pdf) and [Amazon's Dynamo whitepaper](http://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf) as Cassandra's design was influenced by both.
 
@@ -883,7 +882,7 @@ LICENSE
 
 The MIT License
 
-Copyright (c) 2014 Suyog Sonwalkar <flux159@gmail.com>
+Copyright (c) 2014-2016 Suyog Sonwalkar <flux159@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
