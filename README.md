@@ -2,7 +2,7 @@ Cassie
 =====
 Cassie is a lightweight model layer and CQL generator written in javascript that uses the [cassandra-driver](https://github.com/datastax/nodejs-driver) project and attempts to mimic most of mongoose's API to allow for relatively easy switching between MongoDB and Cassandra. Cassie is a small module written completely in javascript and has a small dependency tree. Cassie supports data modeling, syncing tables, standard CRUD operations, Validations, Hooks, Plugins, Lightweight Transactions, Time to Live queries, batching, streaming queries, timing, and debugging queries (with 'pretty debugging' for supported terminals). Note that Cassie-ODM is not currently a full 1:1 mapping to mongoose's API.
 
-Cassie is currently in beta (as of v0.2.1). Use at your own risk in production environments.
+Cassie is currently in beta (as of v0.2.2). Use at your own risk in production environments.
 
 Installing
 ----------
