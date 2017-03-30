@@ -2,7 +2,7 @@ Cassie
 =====
 Cassie is a lightweight model layer and CQL generator written in javascript that uses the [cassandra-driver](https://github.com/datastax/nodejs-driver) project and attempts to mimic most of mongoose's API to allow for relatively easy switching between MongoDB and Cassandra. Cassie is a small module written completely in javascript and has a small dependency tree. Cassie supports data modeling, syncing tables, standard CRUD operations, Validations, Hooks, Plugins, Lightweight Transactions, Time to Live queries, batching, streaming queries, timing, and debugging queries (with 'pretty debugging' for supported terminals). Note that Cassie-ODM is not currently a full 1:1 mapping to mongoose's API.
 
-Cassie is currently in beta (as of v0.2.2). Use at your own risk in production environments.
+Cassie is currently in beta (as of v0.3.0). Use at your own risk in production environments.
 
 Installing
 ----------
@@ -165,7 +165,7 @@ Read Example (SELECT):
     var Fish = cassie.model('Fish');
 
     Fish.find({fish_id: {$in: [2000, 2001, 2002, 2003, 2004]}}).exec(function(err, fishes) {
-				//Note: fishes is an array
+		//Note: fishes is an array
         console.log(fishes.toString());
         var firstFish = fishes[0]; //...
     });
@@ -179,10 +179,55 @@ Read Example 2 (SELECT LIMIT 1 - findOne):
 	var Fish = cassie.model('Fish');
 
 	Fish.findOne({fish_id: 2000}, function(err, fish) {
-			//Note: fish is a single object
-			console.log(fish.toString());
+        //Note: fish is a single object
+        console.log(fish.toString());
 	});
 
+```
+
+Read Example 3 (Querying using $gt, $lt, $gte, $lte, or $in):
+```javascript
+    // Schema for this example: (already sync'ed - see readme-tests/gtquery_test.js):
+    var PokemonSchema = new Schema({
+        fish_id: { type: Number },
+        time: String,
+        name: String,
+    }, { primary: ['fish_id', 'time'] });
+
+    // Read Example Querying:
+    var Pokemon = cassie.model('Pokemon');
+
+    var waterType3000 = new Pokemon({ fish_id: 3000, name: 'eevee', time: '10:00' });
+    var waterType3001 = new Pokemon({ fish_id: 3001, name: 'squirtle', time: '11:00' });
+    var waterType3002 = new Pokemon({ fish_id: 3002, name: 'vaporeon', time: '12:00' });
+    var waterType3003 = new Pokemon({ fish_id: 3003, name: 'wartortle', time: '13:00' });
+
+    var allWaterTypes = [3000, 3001, 3002, 3003];
+    var queries = [waterType3000.save(), waterType3001.save(), waterType3002.save(), waterType3003.save()];
+
+    var options = { debug: true, prettyDebug: true, timing: true };
+    cassie.batch(queries, options, function (err) {
+        // Note the restrictions here - you must supply an $in clause on the primary key
+        // Then you can use a $gt, $lt, $gte, or $lte operator
+        // Doing just Pokemon.find({time: {$gt: '10:00', $lt: '12:00'}}, function(err, fishes)) will not work
+        // See more here: https://www.datastax.com/dev/blog/a-deep-look-to-the-cql-where-clause
+
+        Pokemon.find({ fish_id: { $in: allWaterTypes }, time: { $gt: '10:00', $lt: '12:00' } }, options).exec(function (err, fishes) {
+            if (err) console.log(err);
+
+            console.log('Strictly Greater than:');
+            console.log(fishes.toString());
+            var firstFish = fishes[0]; // ...
+        });
+
+        Pokemon.find({ fish_id: { $in: allWaterTypes }, time: { $gte: '10:00', $lte: '12:00' } }, options).exec(function (err, fishes) {
+            if (err) console.log(err);
+
+            console.log('Greater than or equal to:');
+            console.log(fishes.toString());
+            var firstFish = fishes[0]; // ...
+        });
+    });
 ```
 
 Update Example (UPDATE):
@@ -876,6 +921,11 @@ For helpful tips on data modeling in Cassandra (particularly if you come from a 
 Other databases to look at if Cassandra doesn't fit your data needs: MySQL, PostgreSQL, MongoDB, Riak, neo4j, Oracle, Microsoft SQL Server.
 
 Some options to use if Cassandra doesn't support your query needs: Elastic Search / Solr for search indices, Titan for graph queries, Apache Spark / Apache Hadoop for map reduce operations, Apache Storm for general distributed data processing.
+
+Release Notes
+---
+- 0.1.x to 0.2.x - Dropping support for CQL 2.0 and moving to CQL 3.0. (Similarly dropping support for Cassandra 2.x and moving to Cassandra 3.x).
+- 0.2.x to 0.3.x - Fix for $gt and $lt in query syntax. This could potentially break previous usage of $gt and $lt if using them for greater than or equal to or less than or equal to. $gt is now strictly greater than and $lt is now strictly less than. $gte and $lte now supported along with boolean queries (See Issues #5 and #8).
 
 LICENSE
 ---------
