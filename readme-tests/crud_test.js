@@ -28,6 +28,8 @@ cassie.syncTables(connectOptions, function(err) {
     var Fish = cassie.model('Fish');
 
     Fish.find({fish_id: {$in: [2000, 2001, 2002, 2003, 2004]}}).exec(function(err, fishes) {
+        if (err) console.log(err);
+
         console.log(fishes.toString());
         var firstFish = fishes[0]; //...
     });
@@ -92,6 +94,35 @@ cassie.syncTables(connectOptions, function(err) {
 //Fish.remove can also take multiple ids in the same way as find: {id: {$in: [1234,1235]} or {id: [1234,1235]}
 
 
+// Read Example Querying 1:
+    var Fish = cassie.model('Fish');
+
+    var fishee3000 = new Fish({fish_id: 3000, name: 'eevee'});
+    var fishee3001 = new Fish({fish_id: 3001, name: 'squirtle'});
+    var fishee3002 = new Fish({fish_id: 3002, name: 'vaporeon'});
+
+    var query_1 = fishee3000.save();
+    var query_2 = fishee3001.save();
+    var query_3 = fishee3002.save();
+
+    var options = {debug: true, prettyDebug: true, timing: true};
+    cassie.batch([query_1, query_2, query_3], options, function(err) {
+        Fish.find({fish_id: {$gt: 3000, $lt: 3002}}, options).exec(function(err, fishes) {
+            if (err) console.log(err);
+
+            console.log('greater than');
+            console.log(fishes.toString());
+            var firstFish = fishes[0]; // ...
+        });
+
+        Fish.find({fish_id: {$gte: 3000, $lte: 3002}}, options).exec(function(err, fishes) {
+            if (err) console.log(err);
+
+            console.log('greater than or equal to');
+            console.log(fishes.toString());
+            var firstFish = fishes[0]; // ...
+        });
+    });
 });
 
 
