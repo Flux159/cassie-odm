@@ -924,8 +924,8 @@ Some options to use if Cassandra doesn't support your query needs: Elastic Searc
 
 Release Notes
 ---
-0.1.x to 0.2.x - Dropping support for CQL 2.0 and moving to CQL 3.0. (Similarly dropping support for Cassandra 2.x and moving to Cassandra 3.x).
-0.2.x to 0.3.x - Fix for $gt and $lt in query syntax. This could potentially break previous usage of $gt and $lt if using them for greater than or equal to or less than or equal to. $gt is now strictly greater than and $lt is now strictly less than. $gte and $lte now supported along with boolean queries (See Issues #5 and #8).
+- 0.1.x to 0.2.x - Dropping support for CQL 2.0 and moving to CQL 3.0. (Similarly dropping support for Cassandra 2.x and moving to Cassandra 3.x).
+- 0.2.x to 0.3.x - Fix for $gt and $lt in query syntax. This could potentially break previous usage of $gt and $lt if using them for greater than or equal to or less than or equal to. $gt is now strictly greater than and $lt is now strictly less than. $gte and $lte now supported along with boolean queries (See Issues #5 and #8).
 
 LICENSE
 ---------
