@@ -187,7 +187,14 @@ Read Example 2 (SELECT LIMIT 1 - findOne):
 
 Read Example 3 (Querying using $gt, $lt, $gte, $lte, or $in):
 ```javascript
-// Read Example Querying:
+    // Schema for this example: (already sync'ed - see readme-tests/gtquery_test.js):
+    var PokemonSchema = new Schema({
+        fish_id: { type: Number },
+        time: String,
+        name: String,
+    }, { primary: ['fish_id', 'time'] });
+
+    // Read Example Querying:
     var Pokemon = cassie.model('Pokemon');
 
     var waterType3000 = new Pokemon({ fish_id: 3000, name: 'eevee', time: '10:00' });
