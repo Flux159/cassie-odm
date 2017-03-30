@@ -7,12 +7,6 @@ var cassie = require('../lib/cassie'),
 var connectOptions = { hosts: ["127.0.0.1:9042"], keyspace: "CassieTest" };
 cassie.connect(connectOptions);
 
-// var DogeSchema = new Schema({
-//     'dog_id': {type: Number},
-//     'fname': String,
-//     'lname': String
-// }, {primary: ['dog_id', 'fname']});
-
 var PokemonSchema = new Schema({
     fish_id: { type: Number },
     time: String,
