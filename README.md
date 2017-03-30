@@ -14,6 +14,8 @@ If you have nodejs installed, just run the following in your project's directory
 
 Also note that to use any of the examples below, it is assumed that you have Cassandra downloaded and running (default port of 9042). See the [Apache Cassandra Download](http://cassandra.apache.org/download/) page for how to install Cassandra. Alternatively, get Cassandra from the [Datastax Community Distribution](http://planetcassandra.org/cassandra/). For OSX, you can install Cassandra from homebrew (see [this](http://christopher-batey.blogspot.com/2013/05/installing-cassandra-on-mac-os-x.html)). For debian based systems (Ubuntu), you can install from apt-get.
 
+Note that Cassie 0.2.x and above support CQL 3.0 and Cassandra 3.x+. Support for CQL 2.x and Cassandra 2.x is only available for Cassie 0.1.x. See [Release Notes](https://github.com/Flux159/cassie-odm#release-notes) for more information.
+
 Getting Started
 ----------
 ```javascript
