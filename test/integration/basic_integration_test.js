@@ -43,16 +43,6 @@ cassie.model('Trick', TrickSchema);
 
 var ids = [];
 
-after(function (done) {
-    cassie.deleteKeyspace(connectOptions, function (err, results) {
-        cassie.close(function() {
-            cassie.closeAll(function() {
-                done();
-            });
-        });
-    });
-});
-
 describe('Basic', function () {
 
     before(function (done) {
