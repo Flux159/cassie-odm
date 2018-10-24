@@ -3,6 +3,11 @@
 var cassie = require('../lib/cassie');
 var connectOptions = require('./cassieconnect').connectOptions;
 
+
+before('Connect to Cassandra', function() {
+  cassie.connect(connectOptions);
+});
+
 after('Drop keyspace and Close', function (done) {
   this.timeout(10000);
 

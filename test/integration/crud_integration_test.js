@@ -1,11 +1,9 @@
 var assert = require('assert');
 
+var connectOptions = require('../cassieconnect').connectOptions;
+
 var cassie = require('../../lib/cassie'),
     Schema = cassie.Schema;
-
-var connectOptions = {hosts: ["127.0.0.1:9042"], keyspace: "CassieTest"};
-
-cassie.connect(connectOptions);
 
 var DogSchema = new Schema({
     'dog_id': {type: Number, primary: true},
@@ -13,16 +11,17 @@ var DogSchema = new Schema({
     'lname': String
 }, {sync: true});
 
-cassie.model('Dog', DogSchema);
-
-var Dog = cassie.model('Dog');
-
 describe('Crud', function () {
+  var Dog;
 
     before(function (done) {
+        cassie.model('Dog', DogSchema);
+
+        Dog = cassie.model('Dog');
+
         var options = {};
-        cassie.syncTables(connectOptions, options, function (err, results) {
-            done();
+        cassie.syncTables(connectOptions, options, function (err) {
+            done(err);
         });
     });
 
