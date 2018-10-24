@@ -43,6 +43,8 @@ var ids = [];
 describe('Basic', function () {
 
     before(function (done) {
+        this.timeout(4000);
+
         cassie.model('Trick', TrickSchema);
 
         var options = {};
