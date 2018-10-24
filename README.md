@@ -48,8 +48,8 @@ Modeling is the process of defining your Schemas. Although Cassandra is a NoSQL 
 
 ```javascript
 
-    var cassie = require('cassie-odm'),
-        Schema = cassie.Schema; //Require cassie module
+    var cassie = require('cassie-odm');
+    var Schema = cassie.Schema; //Require cassie module
 
     var config = {keyspace: "CassieTest", hosts: ["127.0.0.1:9042"]};
     cassie.connect(config); //Connect to local cassandra server
