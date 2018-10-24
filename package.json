@@ -16,8 +16,8 @@
     "url": "git://github.com/Flux159/cassie-odm.git"
   },
   "scripts": {
-    "test": "node node_modules/.bin/mocha \"test/**/*.js\"",
-    "test-coverage": "node node_modules/.bin/istanbul cover node_modules/.bin/_mocha -- -u exports -R spec test/**/*.js"
+    "test": "node_modules/.bin/mocha \"test/**/*.js\"",
+    "test-coverage": "node_modules/.bin/istanbul cover node_modules/.bin/_mocha -- -u exports -R spec test/**/*.js"
   },
   "engines": {
     "node": ">=0.10.0"
