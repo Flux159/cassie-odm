@@ -720,8 +720,9 @@ Client connections are handled by node-cassandra-cql. Cassie encapsulates a conn
 ```javascript
 
     var cassie = require('cassie-odm');
-    var connection = cassie.connect({keyspace: "mykeyspace", hosts: ["127.0.0.1:9042"]});
-    
+    var config = {keyspace: "mykeyspace", hosts: ["127.0.0.1:9042"]};
+    var connection = cassie.connect(config);
+
     connection.execute("SELECT * FROM cats", [], function(err, results) {
         if(err) return console.log(err);
         console.log("meow");
