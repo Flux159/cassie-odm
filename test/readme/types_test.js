@@ -248,5 +248,79 @@ describe('Types', function() {
     });
   });
 
-    //Need to test maps, timestamps, Buffers (Blobs), Object (Mixed), UUIDs, Counter, Array
+  describe('Buffer', function () {
+    var Type;
+    var t1;
+
+    before(function (done) {
+      var TypeSchema = new cassie.Schema({ buff: cassie.types.Buffer });
+      Type = cassie.model('BufferType', TypeSchema);
+
+      cassie.syncTables(config, options, function (err) {
+        done(err);
+      });
+    });
+
+    it('should save the type', function (done) {
+      t1 = new Type({ buff: new Buffer('dadfdjkva') });
+      t1.save(options, function(err) {
+        done(err);
+      });
+    });
+
+    it('should retrieve the type', function (done) {
+      Type.find({id: t1.id}, function(err, results) {
+        if (err) return done(err);
+
+        assert.equal(1, results.length);
+        assert.equal('dadfdjkva', results[0].buff.toString());
+
+        done();
+      });
+    });
+  });
+
+  describe('Map', function () {
+    var Type;
+    var t1;
+
+    before(function (done) {
+      var TypeSchema = new cassie.Schema({ specialmap: { type: { String: cassie.types.String } } });
+      Type = cassie.model('MapType', TypeSchema);
+
+      cassie.syncTables(config, options, function (err) {
+        done(err);
+      });
+    });
+
+    it('should save the type', function (done) {
+      t1 = new Type({
+        specialmap: {
+          test: 'blah' ,
+          fu: 'bar'
+        }
+      });
+      t1.save(options, function(err) {
+        done(err);
+      });
+    });
+
+    it('should retrieve the type', function (done) {
+      Type.find({id: t1.id}, function(err, results) {
+        if (err) return done(err);
+
+        assert.equal(1, results.length);
+
+        var expected = {
+          test: 'blah',
+          fu: 'bar'
+        };
+        assert.deepEqual(expected, results[0].specialmap);
+
+        done();
+      });
+    });
+  });
+
+    //Need to test timestamps, Object (Mixed), UUIDs, Counter, Array
 });
