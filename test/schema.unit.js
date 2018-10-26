@@ -26,6 +26,12 @@ describe('Unit :: Schema', function() {
       var schema = new Schema(model, { });
       expect(schema._sync).to.be.true;
     });
+
+    it('should set sync to false when specified', function() {
+      var model = {};
+      var schema = new Schema(model, { sync: false });
+      expect(schema._sync).to.be.false;
+    });
   });
 
   describe('Primary key', function() {
@@ -175,6 +181,20 @@ describe('Unit :: Schema', function() {
           dog_id: [],
           breed: []
         }, schema.validators);
+    });
+
+    it('should add default required validator for each required field', function () {
+      var model = {
+        dog_id: { type: Number, primary: true, required: true },
+        breed: { type: String },
+      };
+      var schema = new Schema(model);
+      expect(schema).to.have.property('validators');
+      expect(schema.validators).to.have.property('dog_id');
+      expect(schema.validators.dog_id[0]).to.have.property('func')
+        .and.is.a('function');
+      expect(schema.validators.dog_id[0]).to.have.property('str')
+        .which.equals('Field: dog_id is required.');
     });
   });
 });
