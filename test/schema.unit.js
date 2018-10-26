@@ -1,28 +1,30 @@
 'use strict';
 
-var assert = require('assert');
+var chai = require('chai');
 
 var types = require('../lib/types');
 var Schema = require('../lib/schema');
+
+var expect = chai.expect;
 
 describe('Unit :: Schema', function() {
   describe('Sync', function() {
     it('should default sync to true when no options', function() {
       var model = {};
       var schema = new Schema(model);
-      assert.equal(true, schema._sync);
+      expect(schema._sync).to.be.true;
     });
 
     it('should default sync to true when null', function() {
       var model = {};
       var schema = new Schema(model, { sync: null });
-      assert.equal(true, schema._sync);
+      expect(schema._sync).to.be.true;
     });
 
     it('should default sync to true when undefined', function() {
       var model = {};
       var schema = new Schema(model, { });
-      assert.equal(true, schema._sync);
+      expect(schema._sync).to.be.true;
     });
   });
 
@@ -32,8 +34,10 @@ describe('Unit :: Schema', function() {
         dog_id: { type: Number, primary: true }
       };
       var schema = new Schema(model);
-      assert.equal('dog_id', schema._primary);
-      assert.deepEqual(['dog_id'], schema._flatPrimaryList);
+      expect(schema, '_primary').to.have.property('_primary')
+        .which.equals('dog_id');
+      expect(schema, '_flatPrimaryList').to.have.property('_flatPrimaryList')
+        .which.deep.equals(['dog_id']);
     });
 
     it('will over ride the primary key if also set in options as string', function() {
@@ -45,8 +49,10 @@ describe('Unit :: Schema', function() {
         primary: 'cat_id'
       };
       var schema = new Schema(model, options);
-      assert.equal('cat_id', schema._primary);
-      assert.deepEqual(['cat_id'], schema._flatPrimaryList);
+      expect(schema, '_primary').to.have.property('_primary')
+        .which.equals('cat_id');
+      expect(schema, '_flatPrimaryList').to.have.property('_flatPrimaryList')
+        .which.deep.equals(['cat_id']);
     });
 
     it('should set the primary key when defined in options as array', function() {
@@ -57,10 +63,12 @@ describe('Unit :: Schema', function() {
         primary: ['cat_id']
       };
       var schema = new Schema(model, options);
-      assert.equal('cat_id', schema._primary);
+      expect(schema, '_primary').to.have.property('_primary')
+        .which.deep.equals(['cat_id']);
 
       // Should this not be 'cat_id'? I think this a bug based on how _flatPrimaryList is used
-      assert.deepEqual([0], schema._flatPrimaryList);
+      expect(schema, '_flatPrimaryList').to.have.property('_flatPrimaryList')
+        .which.deep.equals(['0']);
     });
 
     it('should throw if primary key is set in both field and options as array', function() {
@@ -71,9 +79,9 @@ describe('Unit :: Schema', function() {
         primary: ['cat_id']
       };
 
-      assert.throws(function() {
+      expect(function() {
         var schema = new Schema(model, options);
-      }, /Cannot specify multiple primary keys/);
+      }).to.throw(/Cannot specify multiple primary keys/);
     });
 
     it('should set the composite key', function() {
@@ -84,10 +92,12 @@ describe('Unit :: Schema', function() {
         primary: ['dog_id', 'cat_id']
       };
       var schema = new Schema(model, options);
-      assert.deepEqual(['dog_id', 'cat_id'], schema._primary);
+      expect(schema, '_primary').to.have.property('_primary')
+        .which.deep.equals(['dog_id', 'cat_id']);
 
       // Should this not be ['dog_id', 'cat_id']? I think this a bug based on how _flatPrimaryList is used
-      assert.deepEqual([0, 1], schema._flatPrimaryList);
+      expect(schema, '_flatPrimaryList').to.have.property('_flatPrimaryList')
+        .which.deep.equals(['0', '1']);
     });
 
     it('should set the composite and partition keys', function() {
@@ -98,10 +108,12 @@ describe('Unit :: Schema', function() {
         primary: [['dog_id', 'cat_id'], 'fish_id']
       };
       var schema = new Schema(model, options);
-      assert.deepEqual([['dog_id', 'cat_id'], 'fish_id'], schema._primary);
+      expect(schema, '_primary').to.have.property('_primary')
+        .which.deep.equals([['dog_id', 'cat_id'], 'fish_id']);
 
       // Should this not be ['dog_id', 'cat_id', 'fish_id']? I think this a bug based on how _flatPrimaryList is used
-      assert.deepEqual([0, 1], schema._flatPrimaryList);
+      expect(schema, '_flatPrimaryList').to.have.property('_flatPrimaryList')
+        .which.deep.equals(['0', '1']);
     });
 
     it('should set the primary key to id if none provided', function() {
@@ -110,8 +122,10 @@ describe('Unit :: Schema', function() {
       };
       var options = {};
       var schema = new Schema(model, options);
-      assert.equal('id', schema._primary);
-      assert.deepEqual(['id'], schema._flatPrimaryList);
+      expect(schema, '_primary').to.have.property('_primary')
+        .which.equals('id');
+      expect(schema, '_flatPrimaryList').to.have.property('_flatPrimaryList')
+        .which.deep.equals(['id']);
     });
 
     it('should create id field if no primary key is provided', function() {
@@ -120,10 +134,12 @@ describe('Unit :: Schema', function() {
       };
       var options = {};
       var schema = new Schema(model, options);
-      assert.deepEqual({
-        type: types.datatypes.uuid,
-        primary: true,
-      }, schema._fields['id']);
+      expect(schema).to.have.property('_fields')
+        .which.has.property('id')
+        .that.deep.equals({
+          type: types.datatypes.uuid,
+          primary: true,
+        });
     });
 
     it('should throw if id field exists and no primary key is provided', function() {
@@ -131,9 +147,9 @@ describe('Unit :: Schema', function() {
         id: { type: Number }
       };
       var options = {};
-      assert.throws(function() {
+      expect(function() {
         var schema = new Schema(model, options);
-      }, /must specify a primary key/)
+      }).to.throw(/must specify a primary key/);
     });
   });
 
@@ -144,7 +160,8 @@ describe('Unit :: Schema', function() {
         breed: { type: String }
       };
       var schema = new Schema(model);
-      assert.deepEqual(model, schema._fields);
+      expect(schema).to.have.property('_fields')
+        .which.deep.equals(model);
     });
 
     it('should add a validator for each field', function () {
@@ -153,10 +170,11 @@ describe('Unit :: Schema', function() {
         breed: { type: String }
       };
       var schema = new Schema(model);
-      assert.deepEqual({
-        dog_id: [],
-        breed: []
-      }, schema.validators);
+      expect(schema).to.have.property('validators')
+        .which.deep.equals({
+          dog_id: [],
+          breed: []
+        }, schema.validators);
     });
   });
 });
