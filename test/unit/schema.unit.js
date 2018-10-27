@@ -4,8 +4,8 @@ var chai = require('chai');
 var sinon = require('sinon');
 var sinonChai = require('sinon-chai');
 
-var types = require('../lib/types');
-var Schema = require('../lib/schema');
+var types = require('../../lib/types');
+var Schema = require('../../lib/schema');
 
 var expect = chai.expect;
 chai.use(sinonChai);
