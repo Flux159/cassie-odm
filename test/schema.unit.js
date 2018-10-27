@@ -330,4 +330,49 @@ describe('Unit :: Schema', function() {
         .which.equals('Dog is to old');
     });
   });
+
+  describe('Add', function () {
+    var model = {
+      dog_id: { type: Number, primary: true },
+      breed: { type: String }
+    };
+
+    it('should add a new field to the model', function () {
+      var schema = new Schema(model);
+      expect(schema).to.have.property('_fields')
+        .which.have.all.keys('dog_id', 'breed');
+
+      schema.add({ age: Number });
+      expect(schema).to.have.property('_fields')
+        .which.have.all.keys('dog_id', 'breed', 'age');
+      expect(schema._fields.age).to.equal(Number);
+    });
+
+    it('should not add field as primary', function () {
+      // TODO: Maybe we should throw here? Fail fast and all that
+      var schema = new Schema(model);
+      expect(schema).to.have.property('_fields')
+        .which.have.all.keys('dog_id', 'breed');
+
+      schema.add({ age: { type: Number, primary: true } });
+      expect(schema).to.have.property('_fields')
+        .which.have.all.keys('dog_id', 'breed', 'age');
+      expect(schema._fields.age).to.deep.equals({
+        type: Number,
+        primary: false
+      });
+    });
+
+    it('should over write existing fields', function () {
+      var schema = new Schema(model);
+      expect(schema).to.have.property('_fields')
+        .which.have.all.keys('dog_id', 'breed');
+      expect(schema._fields.breed).to.deep.equals({ type: String });
+
+      schema.add({ breed: { type: Number } });
+      expect(schema).to.have.property('_fields')
+        .which.have.all.keys('dog_id', 'breed');
+      expect(schema._fields.breed).to.deep.equals({ type: Number });
+    });
+  });
 });
