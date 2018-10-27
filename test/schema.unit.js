@@ -1,11 +1,14 @@
 'use strict';
 
 var chai = require('chai');
+var sinon = require('sinon');
+var sinonChai = require('sinon-chai');
 
 var types = require('../lib/types');
 var Schema = require('../lib/schema');
 
 var expect = chai.expect;
+chai.use(sinonChai);
 
 describe('Unit :: Schema', function() {
   describe('Sync', function() {
@@ -469,5 +472,34 @@ describe('Unit :: Schema', function() {
         });
     })
 
+  });
+
+  describe('Plugin', function () {
+    it('should throw if not a function', function () {
+      var model = {
+        dog_id: { type: Number, primary: true },
+        breed: { type: String }
+      };
+      var schema = new Schema(model);
+
+      expect(function () {
+        schema.plugin('oops');
+      }).to.throw(/must be a function/);
+    });
+
+    it('should invoke plugin function', function () {
+      var model = {
+        dog_id: { type: Number, primary: true },
+        breed: { type: String }
+      };
+      var plugin = sinon.stub();
+      var options = { hello: 'world' };
+
+      var schema = new Schema(model);
+      schema.plugin(plugin, options);
+
+      expect(plugin).to.have.been.calledOnce;
+      expect(plugin).to.have.been.calledWith(schema, options);
+    });
   });
 });
