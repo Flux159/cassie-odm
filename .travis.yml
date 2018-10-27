@@ -10,11 +10,7 @@ cache:
 services:
   - cassandra
 node_js:
-  - '0.10'
   - '4'
   - '6'
   - '8'
   - '10'
-matrix:
-  allow_failures:
-    - node_js: '0.10'
