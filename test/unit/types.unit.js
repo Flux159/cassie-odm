@@ -2,7 +2,7 @@
 
 var assert = require('assert');
 
-var types = require('../lib/types');
+var types = require('../../lib/types');
 
 describe('Unit :: Types', function() {
   describe('Long', function() {
