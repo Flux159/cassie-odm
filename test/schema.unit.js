@@ -47,7 +47,7 @@ describe('Unit :: Schema', function() {
     });
 
     it('will over ride the primary key if also set in options as string', function() {
-      // Should it be doing this?
+      // TODO: Should it be doing this?
       var model = {
         dog_id: { type: Number, primary: true }
       };
@@ -374,5 +374,100 @@ describe('Unit :: Schema', function() {
         .which.have.all.keys('dog_id', 'breed');
       expect(schema._fields.breed).to.deep.equals({ type: Number });
     });
+  });
+
+  describe('Add Query', function () {
+    var model = {
+      dog_id: { type: Number, primary: true },
+      breed: { type: String }
+    };
+
+    it('should not add the query if not a function', function () {
+      // TODO: Should this not throw?
+      var schema = new Schema(model);
+      schema.addQuery({ get: 42 });
+      expect(schema).to.have.property('_addQueries')
+        .which.deep.equals({});
+    });
+
+    it('should add custom query', function () {
+      var get = function() {};
+      var schema = new Schema(model);
+      schema.addQuery({ get: get });
+      expect(schema).to.have.property('_addQueries')
+        .which.has.property('get')
+        .that.equals(get);
+    });
+  });
+
+  describe('Index', function () {
+    //TODO: If index is invalid we just log, should we not throw?
+
+    it('should set field\'s index to true', function() {
+      var model = {
+        dog_id: { type: Number, primary: true },
+        breed: { type: String }
+      };
+      var schema = new Schema(model);
+      schema.index('breed');
+      expect(schema).to.have.property('_fields')
+        .which.has.property('breed')
+        .that.has.property('index')
+        .which.is.true;
+    });
+
+    it('should set field\'s index to true when field is just Type', function() {
+      var model = {
+        dog_id: { type: Number, primary: true },
+        breed: String
+      };
+      var schema = new Schema(model);
+      schema.index('breed');
+      expect(schema).to.have.property('_fields')
+        .which.has.property('breed')
+        .that.has.property('index')
+        .which.is.true;
+    });
+  });
+
+  describe('Virtual', function () {
+    // TODO: If field does not exist we just log, should we rather throw in this case?
+    // TODO: If we forget to pass in the virtual function we just log, should we throw??
+
+    it('should add the virtual field', function () {
+      var model = {
+        dog_id: { type: Number, primary: true },
+        breed: { type: String }
+      };
+      var field = function () {}
+
+      var schema = new Schema(model);
+      schema.virtual('name', field);
+
+      expect(schema).to.have.property('_virtuals')
+        .which.has.property('name')
+        .that.has.property('get')
+        .which.equals(field);
+    });
+
+    it('should add the virtual field with getter and setter', function () {
+      var model = {
+        dog_id: { type: Number, primary: true },
+        breed: { type: String }
+      };
+      var get = function () {}
+      var set = function () {}
+
+      var schema = new Schema(model);
+      schema.virtual('name', { get: get, set: set });
+
+      expect(schema).to.have.property('_virtuals')
+        .which.has.property('name')
+        .that.deep.equals({
+          get: get,
+          set: set
+        });
+    })
+
   });
 });
