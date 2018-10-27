@@ -197,4 +197,137 @@ describe('Unit :: Schema', function() {
         .which.equals('Field: dog_id is required.');
     });
   });
+
+  describe('Create Options', function () {
+    it('should set create options to undefined if not set', function () {
+      var model = {
+        dog_id: { type: Number, primary: true },
+        breed: { type: String }
+      };
+      var schema = new Schema(model);
+      expect(schema).to.have.property('_createOptions')
+        .which.is.undefined;
+    });
+
+    it('should set create options to if set', function () {
+      var model = {
+        dog_id: { type: Number, primary: true },
+        breed: { type: String }
+      };
+      var schema = new Schema(model, { create_options: 42 });
+      expect(schema).to.have.property('_createOptions')
+        .which.equals(42);
+    });
+  });
+
+  describe('PRE', function () {
+    var model = {
+      dog_id: { type: Number, primary: true },
+      breed: { type: String }
+    };
+    var hook = function () {};
+
+    it('should throw if invalid pre hook', function() {
+      // TODO: Should throw Error objects not strings
+      var schema = new Schema(model);
+      expect(function() {
+        schema.pre('invalid', hook)
+      }).to.throw(/only supports/);
+    });
+
+    it('should add a pre save hook', function() {
+      var schema = new Schema(model);
+      schema.pre('save', hook);
+      expect(schema).to.have.property('preFunctions')
+        .which.has.property('save')
+        .that.includes(hook);
+    });
+
+    it('should add a pre remove hook', function() {
+      var schema = new Schema(model);
+      schema.pre('remove', hook);
+      expect(schema).to.have.property('preFunctions')
+        .which.has.property('remove')
+        .that.includes(hook);
+    });
+  });
+
+  describe('POST', function () {
+    var model = {
+      dog_id: { type: Number, primary: true },
+      breed: { type: String }
+    };
+    var hook = function () {};
+
+    it('should throw if invalid post hook', function() {
+      // TODO: Should throw Error objects not strings
+      var schema = new Schema(model);
+      expect(function() {
+        schema.post('invalid', hook)
+      }).to.throw(/only supports/);
+    });
+
+    it('should add a post save hook', function() {
+      var schema = new Schema(model);
+      schema.post('save', hook);
+      expect(schema).to.have.property('postFunctions')
+        .which.has.property('save')
+        .that.includes(hook);
+    });
+
+    it('should add a post remove hook', function() {
+      var schema = new Schema(model);
+      schema.post('remove', hook);
+      expect(schema).to.have.property('postFunctions')
+        .which.has.property('remove')
+        .that.includes(hook);
+    });
+
+    it('should add a post validate hook', function() {
+      var schema = new Schema(model);
+      schema.post('validate', hook);
+      expect(schema).to.have.property('postFunctions')
+        .which.has.property('validate')
+        .that.includes(hook);
+    });
+
+    it('should add a post init hook', function() {
+      var schema = new Schema(model);
+      schema.post('init', hook);
+      expect(schema).to.have.property('postFunctions')
+        .which.has.property('init')
+        .that.includes(hook);
+    });
+  });
+
+  describe('Validate', function () {
+    var model = {
+      dog_id: { type: Number, primary: true },
+      breed: { type: String }
+    };
+    var validator = function () {};
+
+    it('should add validator to field', function() {
+      var schema = new Schema(model);
+      schema.validate('breed', validator, 'Breed is not cool enough');
+      expect(schema).to.have.property('validators');
+      expect(schema.validators).to.have.property('breed');
+      expect(schema.validators.breed[0]).to.have.property('func')
+        .and.is.a('function');
+      expect(schema.validators.breed[0]).to.have.property('str')
+        .which.equals('Breed is not cool enough');
+    });
+
+    it('should add validator to non-existing field', function() {
+      // TODO: Wonder if it should actually throw in this case
+      var schema = new Schema(model);
+      schema.validate('age', validator, 'Dog is to old');
+      expect(schema).to.have.property('validators');
+      expect(schema.validators).to.have.property('age');
+      expect(schema.validators.age[0]).to.have.property('func')
+        .and.is.a('function');
+      expect(schema.validators.age[0]).to.have.property('str')
+        .which.equals('Dog is to old');
+    });
+  });
 });
