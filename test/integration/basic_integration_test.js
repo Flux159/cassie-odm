@@ -1,10 +1,9 @@
 var assert = require('assert');
 
+var connectOptions = require('../cassieconnect').connectOptions;
+
 var cassie = require('../../lib/cassie'),
     Schema = cassie.Schema;
-
-var connectOptions = {hosts: ["127.0.0.1:9042"], keyspace: "CassieTest"};
-cassie.connect(connectOptions);
 
 var TrickSchema = new Schema({'name': {type: String, index: true}});
 
@@ -39,23 +38,13 @@ TrickSchema.plugin(function (schema) {
     });
 }, {testing: 'options'});
 
-cassie.model('Trick', TrickSchema);
-
 var ids = [];
-
-after(function (done) {
-    cassie.deleteKeyspace(connectOptions, function (err, results) {
-        cassie.close(function() {
-            cassie.closeAll(function() {
-                done();
-            });
-        });
-    });
-});
 
 describe('Basic', function () {
 
     before(function (done) {
+        cassie.model('Trick', TrickSchema);
+
         var options = {};
 //        var options = {debug: true, prettyDebug: true};
         cassie.syncTables(connectOptions, options, function (err, results) {

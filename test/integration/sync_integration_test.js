@@ -1,15 +1,14 @@
 var assert = require('assert');
 
+var connectOptions = require('../cassieconnect').connectOptions;
 var cassie = require('../../lib/cassie');
-var config = {keyspace: "CassieTest", hosts: ["127.0.0.1:9042"]};
-cassie.connect(config);
 
 describe('Sync', function () {
 
     describe("createKeyspace", function () {
         it('Should check or create a keyspace', function (done) {
-            cassie.checkKeyspace(config, function (err, results) {
-                done();
+            cassie.checkKeyspace(connectOptions, function (err) {
+                done(err);
             });
         });
     });
@@ -23,13 +22,13 @@ describe('Sync', function () {
 //            var options = {debug: true, prettyDebug: true};
             var options = {};
 
-            cassie.syncTables(config, options, function () {
+            cassie.syncTables(connectOptions, options, function () {
 
                 var newCatSchema = new cassie.Schema({name: String, breed: String});
                 var Cat = cassie.model('Cat', newCatSchema);
 
-                cassie.syncTables(config, options, function () {
-                    done();
+                cassie.syncTables(connectOptions, options, function (err) {
+                    done(err);
                 });
 
             });

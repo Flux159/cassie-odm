@@ -1,8 +1,7 @@
 var assert = require('assert');
 
+var connectOptions = require('../cassieconnect').connectOptions;
 var cassie = require('../../lib/cassie');
-var config = {keyspace: "CassieTest", hosts: ["127.0.0.1:9042"]};
-cassie.connect(config);
 
 describe("Queries", function () {
     it('Should insert, find, and batch remove (with debug)', function (done) {
@@ -12,7 +11,7 @@ describe("Queries", function () {
 
         var options = {};
 
-        cassie.syncTables(config, options, function () {
+        cassie.syncTables(connectOptions, options, function () {
 
             var newCatSchema = new cassie.Schema({name: String, breed: String});
             var Cat = cassie.model('Cat', newCatSchema);
