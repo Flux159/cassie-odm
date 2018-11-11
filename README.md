@@ -23,21 +23,22 @@ Getting Started
     var cassie = require('cassie-odm');
     var config = {keyspace: "CassieTest", hosts: ["127.0.0.1:9042"]};
     cassie.connect(config);
-    
+
     var CatSchema = new cassie.Schema({name: String});
     var Cat = cassie.model('Cat', CatSchema);
-    
+
     cassie.syncTables(config, function(err, results) {
-    
+        if(err) return console.log(err);
+
         var kitty = new Cat({ name: 'Eevee'});
         kitty.save(function(err) {
             if(err) return console.log(err);
             console.log("meow");
             cassie.close();
         });
-        
+
     });
-    
+
 
 ```
 
@@ -47,8 +48,8 @@ Modeling is the process of defining your Schemas. Although Cassandra is a NoSQL 
 
 ```javascript
 
-    var cassie = require('cassie-odm'),
-        Schema = cassie.Schema; //Require cassie module
+    var cassie = require('cassie-odm');
+    var Schema = cassie.Schema; //Require cassie module
 
     var config = {keyspace: "CassieTest", hosts: ["127.0.0.1:9042"]};
     cassie.connect(config); //Connect to local cassandra server
@@ -719,8 +720,9 @@ Client connections are handled by node-cassandra-cql. Cassie encapsulates a conn
 ```javascript
 
     var cassie = require('cassie-odm');
-    var connection = cassie.connect({keyspace: "mykeyspace", hosts: ["127.0.0.1:9042"]});
-    
+    var config = {keyspace: "mykeyspace", hosts: ["127.0.0.1:9042"]};
+    var connection = cassie.connect(config);
+
     connection.execute("SELECT * FROM cats", [], function(err, results) {
         if(err) return console.log(err);
         console.log("meow");

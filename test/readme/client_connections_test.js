@@ -1,21 +1,15 @@
-var assert = require('assert');
+'use strict';
 
+var config = require('../cassieconnect').connectOptions;
 var cassie = require('../../lib/cassie');
 
-describe('Client Connections', function() {
+describe('Client Connections and raw queries', function() {
+    it('should not fail', function (done) {
+        var connection = cassie.connect(config);
 
-    describe("find", function() {
-        it('should return -1 when the value is not present', function(done) {
-//            var cassie = require('cassie-odm');
-            var cassie = require('../../lib/cassie');
-            var connection = cassie.connect({keyspace: "CassieTest", hosts: ["127.0.0.1:9042"]});
-
-            connection.execute("SELECT * FROM cats", [], function(err, results) {
-                if(err) return console.log(err);
-                console.log("meow");
-                done(err);
-            });
+        connection.execute("SELECT * FROM cats", [], function(err, results) {
+          console.log("meow");
+          done(err);
         });
     });
-
 });

@@ -1,13 +1,11 @@
-var assert = require('assert');
+'use strict';
+
+var config = require('../cassieconnect').connectOptions;
+var cassie = require('../../lib/cassie');
 
 describe('Modeling', function () {
     it('Should run the test successfully (from readme)', function (done) {
-
-        var cassie = require('../../lib/cassie'),
-            Schema = cassie.Schema; //Require cassie module
-
-        var config = {keyspace: "CassieTest", hosts: ["127.0.0.1:9042"]};
-        cassie.connect(config); //Connect to local cassandra server
+        var Schema = cassie.Schema; //Require cassie module
 
         //User Schema
         var UserSchema = new Schema({
@@ -19,7 +17,7 @@ describe('Modeling', function () {
         //Adds a validator for username
         UserSchema.validate('username', function (user) {
             return (user.username !== null);
-        });
+        }, "Username cannot be empty.");
 
         //Add a post-save hook
         UserSchema.post('save', function (model) {
@@ -36,14 +34,14 @@ describe('Modeling', function () {
         //Sync the schemas with Cassandra to ensure that they exist and contain the appropriate fields (see additional notes on the limitations of syncing)
         var syncOptions = {debug: true, prettyDebug: true, warning: true};
         cassie.syncTables(config, syncOptions, function (err, results) {
-            console.log(err);
+            if (err) return done(err);
 
             //Creates a new user
             var newUser = new User({username: 'ManBearPig', email: 'AlGore@gmail.com', hashed_password: 'Never-do-this-use-crypto-module'});
 
             //Asynchronous function that returns to provided callback
             newUser.save({debug: true, prettyDebug: true}, function (err, results) {
-                if (err) console.log(err);
+                if (err) return done(err);
 
                 //Creates a new blog
                 var newBlog = new Blog({title: 'Global warming and Manbearpig', content: 'Half-man, half-bear, half-pig...', author: newUser.username});
@@ -61,11 +59,7 @@ describe('Modeling', function () {
 
                 //Run batch cql commands
                 cassie.batch([firstQuery, secondQuery], {consistency: cassie.consistencies.quorum, debug: true, prettyDebug: true}, function (err, results) {
-                    if (err) console.log(err);
-
-                    //Close the connection since we're done
-                    cassie.close();
-                    done(); //Added to complete test (not in modeling documentation)
+                    done(err);
                 });
             });
 
