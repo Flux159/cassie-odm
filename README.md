@@ -136,12 +136,12 @@ Create, Read, Update, Delete operations on Models.
 ```javascript
 
     //Schema used for CRUD examples:
-    
+
     var FishSchema = new Schema({
         fish_id: {type: Number, primary: true},
         name: String
     });
-    
+
     cassie.model('Fish', FishSchema);
 
 ```
@@ -318,16 +318,28 @@ Buffer (Cassandra stores as blobs)
 Arrays (must specify internal type, like: [String])
 Maps (must specify internal types, like {String: String} - arbitrary maps are not supported, use Buffers (Blobs) instead)
 
+> **Arrays**: For arrays each element in the array must be of the same type therefore to specify an array one needs to specify the type the array will hold. To do this just specify the field as beign an array of the choosen type.
+> ```
+>  return new Schema({ colours: [String] });
+> ```
+> Here instead of defining `colors` as a `String` we defined it as an _array_ of `String`s
+
+> **Maps**: For maps each entry in the map must use the same type for their keys and values; that is each entry uses the same key type and uses the same value type as every other entry. This means that you need to define the types for the the key and value when defining a map. To do this define the type field as an object with one property whose key and value are the types for the maps key and value.
+> ```
+> return new Schema({ chinesecalendar: { type: { Number: String });
+> ```
+Here we define `chinesecalendar` as a map which takes a `Number`/`String` key value pair (e.g. `{ 2019: 'pig'}`)
+
 Sync
 ----------
 
-Syncing is the process of creating keyspaces (similar to a database in traditional RDBMs) and column families (similar to tables) from your schemas. Cassie handles the process of syncing via its syncTables function. Sync tables will create a keyspace if it doesn't exist, create column families if they don't exist, and alter column families if you've added fields to your schemas. Syncing also creates a primary key with the name of 'id' if you don't specify a different primary key. This allows you to rapidly iterate on modifying your schemas and keep your tables in sync. 
+Syncing is the process of creating keyspaces (similar to a database in traditional RDBMs) and column families (similar to tables) from your schemas. Cassie handles the process of syncing via its syncTables function. Sync tables will create a keyspace if it doesn't exist, create column families if they don't exist, and alter column families if you've added fields to your schemas. Syncing also creates a primary key with the name of 'id' if you don't specify a different primary key. This allows you to rapidly iterate on modifying your schemas and keep your tables in sync.
 
-However, syncing has some limitations in its current form. 
+However, syncing has some limitations in its current form.
 
 Syncing cannot alter column names, so if you decide to change your column name, you would have to use cqlsh (see CQL documentation on ALTER TABLE with the RENAME clause [here](http://www.datastax.com/documentation/cql/3.0/cql/cql_reference/alter_table_r.html). This is because cassie doesn't know what you previously defined a column as (and it has no way of knowing that information).
 
-Cassie cannot change the types of already defined columns. This is currently a limitation of Cassie's sync function and may be added later (see roadmap). 
+Cassie cannot change the types of already defined columns. This is currently a limitation of Cassie's sync function and may be added later (see roadmap).
 
 Cassie also cannot change the primary key for any table after it has been created (ie you must define your schemas according to query patterns for Cassandra to be effective, see "Data Modeling Notes"). This is a limitation of Cassandra.
 
@@ -360,7 +372,7 @@ Here is an example of using sync tables to sync two tables to the database with 
         //Registers the schemas with cassie
         var User = cassie.model('User', UserSchema);
         var Blog = cassie.model('Blog', BlogSchema);
-        
+
         var syncOptions = {debug: true, prettyDebug: true, warning: true};
         cassie.syncTables(config, syncOptions, function (err) {
             console.log(err);
@@ -380,7 +392,7 @@ Table Creation Options when syncing
 Primary Keys
 ----------
 Cassandra requires a primary key for all column families. This means that you would need to define a primary key whenever creating a table. Cassie relaxes that restriction slightly by allowing you to define Schemas without primary keys. However, what Cassie does internally is create an 'id' field on your Schema and adds a pre-save hook to generate an id for all new models (see "Hooks" for how you can do the same with your own fields). Cassie then marks this 'id' field as your primary key. This is important to note because primary keys cannot be modified using an ALTER TABLE command. In Cassandra, once your primary key has been set for a table, you're not allowed to modify it. If you want sophisticated primary keys (like composite primary keys), you need to design your Data Model appropriately from the beginning and make sure that you define it correctly in your Schema.
- 
+
  See "Data Modeling" notes for more information on designing appropriate models for common use cases. Take particular note of how composite primary keys can be used for quick advanced queries.
 
 The examples below show how a primary key can be explicitly defined on a field, how a composite primary key can be defined, and how to allow Cassie to generate a primary key for you:
@@ -393,21 +405,21 @@ The examples below show how a primary key can be explicitly defined on a field, 
         'fname': String,
         'lname': String
     });
-    
+
     //Explicitly defining a composite primary key
     var DogeSchema = new Schema({
         'dog_id': {type: Number},
         'fname': String,
         'lname': String
     }, {primary: ['dog_id', 'fname']});
-    
+
     //Explicitly defining a composite primary key and partition key (row key is based on dog_id and fname)
     var DawgSchema = new Schema({
         'dog_id': {type: Number},
         'fname': String,
         'lname': String
     }, {primary: [['dog_id','fname'], 'lname']});
-    
+
     //Cassie defines 'id' field for you - Note that in this case 'dog_id' is NOT the primary key, 'id' is (and 'id' is a uuid v4 type)
     //Cassie will also add a presave function that adds the 'id' field for you before you save a new model.
     var DagSchema = new Schema({
@@ -429,7 +441,7 @@ Cassie supports secondary indexes on fields with the following option {index: tr
         'fname': {type: String, index: true},
         'lname': String
     });
-    
+
     //Alternative way of defining a secondary index
     DogSchema.index('lname');
 ```
@@ -465,31 +477,31 @@ Cassie supports pre-save and pre-remove hooks for its models. It also supports p
 ```javascript
 
     var TrickSchema = new Schema({'name': {type: String, index: true}});
-    
+
     TrickSchema.post('init', function (model) {
         console.log("Initialized Trick");
     });
-    
+
     TrickSchema.post('validate', function (model) {
         console.log("Validated Trick");
     });
-    
+
     TrickSchema.pre('save', function (model) {
         console.log("About to save (insert or update) trick to database");
     });
-    
+
     TrickSchema.post('save', function (model, err, results) {
         if(!err) console.log("Saved Trick to database");
     });
-    
+
     TrickSchema.pre('remove', function (model) {
         console.log("About to remove trick (or trick fields) from database");
     });
-    
+
     TrickSchema.post('remove', function (model, err, results) {
         if(!err) console.log("Removed trick (or trick fields) from database");
     });
-    
+
     cassie.model('Trick', TrickSchema);
 
 ```
@@ -501,11 +513,11 @@ Plugins
 Models support plugins. Plugins allow you to share schema properties between models and allow for pre-save hooks, validations, indexes, pretty much anything you can do with a Schema. Note that you can't modify primary keys or add primary keys in a plugin.
 
 ```javascript
-    
+
     //updatedAtPlugin.js
     function updatedAtPlugin(schema, options) {
         schema.add({updated_at: Date}); //Adds a field to the model instance
-    
+
         schema.addQuery({'get': function(args, callback) {
             console.log("Inside Model get function");
             var results = args;
@@ -515,26 +527,26 @@ Models support plugins. Plugins allow you to share schema properties between mod
         //This can be useful when making plugins that add query logic to a Model class
         //Example: Integrate an external data source / index in a plugin (like a search index), then add a method that will query that external data source
         //Combining pre/post save logic and queries can allow for expressive plugins
-    
+
         schema.pre('save', function(model) {
             model.updated_at = new Date();
         });
-    
+
         if(options && options.index) {
             schema.index('updated_at');
         }
     }
-    
+
     //user.js
     //var updatedAtPlugin = require('./updatedAtPlugin');
     var UserSchema = new Schema({name: String});
     UserSchema.plugin(updatedAtPlugin, {index: true});
-    
+
     //blog.js
     //var updatedAtPlugin = require('./updatedAtPlugin');
     var BlogSchema = new Schema({title: String});
     BlogSchema.plugin(updatedAtPlugin, {index: true});
-    
+
     var User = cassie.model('User', UserSchema);
     var Blog = cassie.model('Blog', BlogSchema);
 
@@ -555,25 +567,25 @@ For updating data, you can use the IF field = 'value' CQL command by passing {if
 ```javascript
 
     var User = cassie.model('User');
-    
+
     //Assumption is that user_id is primary key
     var new_user = new User({user_id: 2000, name: 'steve'});
-    
+
     new_user.save({if_not_exists: true}, function(err) {
         //Handle errors, etc.
-        
+
         //Same user using IF field = value
         new_user.name = "bill";
-        
+
         new_user.save({if: {name: 'bob'}, debug: true}, function(err) {
-            
+
             //Handle errors, etc.
             //Note that this query will not update new_user because new_user's name is not 'bob'
-        
+
         });
-        
+
     });
-    
+
 
 ```
 
@@ -585,7 +597,7 @@ Cassie supports specifying a TTL when inserting data via the {ttl: Number} optio
 ```javascript
 
     var Post = cassie.model('Post');
-    
+
     var new_post = new Post({title: 'My time limited post'});
 
     new_post.save({ttl: 86400}, function(err) {
@@ -601,16 +613,16 @@ Cassie can limit your queries based on options or by chaining queries. See the e
 ```javascript
 
     var User = cassie.model('User');
-    
+
     User.find({}, {limit: 10, function(err, users) {
         console.log(users.toString());
     });
-    
+
     //Same query as above using chaining
     User.find({}).limit(10).exec(function(err, users) {
         console.log(users.toString());
     });
-    
+
 Note that Cassandra sorts your columns based on the clustering key specified during table creation.
 
 ```
@@ -632,7 +644,7 @@ Cassie can batch queries together to run at once. This is done by not specifying
         //Handle errors, etc.
         if(err) console.log(err);
     });
-    
+
 
 ```
 
@@ -643,11 +655,11 @@ Cassie can execute prepared queries by passing in a "prepared" option when calli
 ```javascript
 
     var User = cassie.model('User');
-    
+
     User.find({user_id: {$in: [1000, 1001, 1002, 1003]}}, {prepared: true}, function(err, users) {
         //Handle errors, do stuff w/ results
     });
-    
+
     //This is equivalent to the above
     var query = User.find({user_id: {$in: [1000, 1001, 1002, 1003]}});
     query.exec({prepared: true}, function(err, users) {
@@ -663,7 +675,7 @@ Cassie supports streaming results via a Query.stream(options, callback) method. 
 ```javascript
 
     var User = cassie.model('User');
-    
+
     var query = User.find({user_id: {$in: [1000, 1001, 1002, 1003]}});
     query.stream()
         .on('readable', function() {
@@ -691,14 +703,14 @@ Cassie supports timing and debugging capabilities (including a prettyDebug mode 
 ```javascript
 
     var options = {debug: true, timing: true, prettyDebug: true};
-    
+
     //Examples
-    
+
     //User.find({}, options, callback);
 
     //var user = new User({name: 'Steve'});
     //user.save(options, callback);
-    
+
     //var query = user.save();
     //query.exec(options, callback);
 
@@ -727,14 +739,14 @@ Client connections are handled by node-cassandra-cql. Cassie encapsulates a conn
         if(err) return console.log(err);
         console.log("meow");
     });
-    
+
 ```
 
 Advanced Table Creation Options
 ----------
 There are a few queries that can be efficiently executed if you use on-disk sorting of columns when creating tables. Cassie allows you to specify options for creating tables when defining your schemas. See "Data Modeling Notes" for more information on efficient client queries. See [Using Clustering Order](http://www.datastax.com/documentation/cql/3.1/cql/cql_reference/refClstrOrdr.html) for Clustering Order option. Cassie only supports the clustering order option at the moment (adding all table properties is on the roadmap, you can modify them manually currently using CQL's ALTER TABLE command).
 
-See [CQL Create Table documentation](http://www.datastax.com/documentation/cql/3.1/cql/cql_reference/create_table_r.html) and [CQL Table Properties](http://www.datastax.com/documentation/cql/3.1/cql/cql_reference/tabProp.html) for all the advanced options. 
+See [CQL Create Table documentation](http://www.datastax.com/documentation/cql/3.1/cql/cql_reference/create_table_r.html) and [CQL Table Properties](http://www.datastax.com/documentation/cql/3.1/cql/cql_reference/tabProp.html) for all the advanced options.
 
 ```javascript
 
@@ -773,25 +785,25 @@ By default, cassie assumes that you are developing locally and creates keyspaces
                 // '20':3
             }
     }
-    
+
     //Strategy options is only taken into account for NetworkTopologyStrategy - if not specified, then throws error if trying to sync. The key specified in strategy options is your database name (which varies based on what "Snitch" you set in your cassandra.yaml file. For a file property based snitch, you would define it to be your database name. The '0' here is specified if you use a RankInferringSnitch and your database is located at an internal IP of xxx.0.xxx.xxx (see Cassandra Documentation for more information).
-    
+
 
 ```
 
 Common Issues using Cassandra
 ----------
- 
+
 You can't sort or use greater than or less than operators on a non-composite primary key column (see example below on what you can sort on). Partition keys can only be searched using equality or "IN". The way to get around this is to use composite primary keys with the appropriate columns. Because of this, you need to design your data models differently (full normalization is generally not a good idea, your data needs to be partially denormalized for good consistent performance - see Data modeling notes for more information).
-  
+
 According to some Datastax documentation, secondary indices are usually only good when you have fields that are common across many rows. A good example is when you have a list of people, each containing state and country information. You would put a secondary index on the state field and on the country field if you wanted to query "What users are located in this state" or "What users are located in this country". You can only use equality operators on secondary indices (see example below)
-  
-Unlike MySQL, PostgreSQL, or other Relational Databases, you can't do JOINs across tables in Cassandra. This also means that its not a good idea to fully normalize your data (see "Data Modeling Notes". 
-  
+
+Unlike MySQL, PostgreSQL, or other Relational Databases, you can't do JOINs across tables in Cassandra. This also means that its not a good idea to fully normalize your data (see "Data Modeling Notes".
+
 Unlike MongoDB (or recent versions of PostgreSQL with hstore/json data types), you can't put arbitrary JSON data into Cassandra (must define a schema - although you can always add columns later). Note that you can put maps and blobs/buffers into Cassandra, but its generally not a good idea to use Blobs over 10MB according to many data modeling best practices. Also note that you could store the json as a string and handle JSON stringifying during inserts and JSON parsing during retrieval. Cassie relaxes schema definitions significantly by auto syncing your tables and warning you when your schema may be missing columns that are defined in the database. However, do note that primary keys are defined at table CREATION time and cannot be altered.
-   
+
 Unlike MongoDB and Riak, Cassandra doesn't come with full text search built-in. You would need to use Apache Solr, Elastic Search, or any other full text search indexing engine to support full text search (Datastax Enterprise is built on top of Cassandra and has Apache Solr integration; you can also achieve something similar by writing an Elastic Search river that pulls data from Cassandra / is pushed data from your app or a Cassandra 2.1 Trigger). Note that with any full-text search indexing solution that is not directly tied to your primary data store, you can end up with consistency issues. The tradeoff is that by not directly tying your search indices in your database, you can scale each component separately (and deal with the consistency issue by manually pushing/pulling data into your search index). With Cassie plugins, it would be possible to add a pre/post save hook to add (push data) to your search index of choice and a model method (like Model.search) to query the search index instead of Cassandra.
-   
+
 Cassandra is not a graph database like neo4j or OrientDB, but you can apparently integrate Titan with Cassandra for Graph / Geolocation type queries.
 
 Cassandra does not come with Map Reduce capabilities built in, but you can integrate with Apache Spark / Apache Hadoop for advanced Map Reduce queries / operations (Datastax Enterprise apparently comes with integrations for Hadoop).
@@ -804,7 +816,7 @@ See Data Modeling Notes and Common Examples for how to model common use cases (O
     var UserSchema = new Schema({user_id: Number, name: String}, {primary: ['user_id']});
     var User = cassie.model('User', UserSchema);
     User.find({user_id: [1000, 1001, 1002, 1003]}).sort({name: 1}).exec(callback);
-    
+
     //Can't sort on name
     var UserSchema = new Schema({user_id: Number, name: String}, {primary: ['user_id']});
     UserSchema.index('name');
@@ -815,7 +827,7 @@ See Data Modeling Notes and Common Examples for how to model common use cases (O
     var UserSchema = new Schema({user_id: Number, name: String}, {primary: ['user_id', 'name']});
     var User = cassie.model('User', UserSchema);
     User.find({user_id: [2000, 2001, 2002, 2003]}).limit(10).sort({name: 1}).exec(callback);
-    
+
     //Secondary index can only use '=' operator
     var UserSchema = new Schema({user_id: Number, name: String}, {primary: ['user_id']});
     UserSchema.index('name');
@@ -831,13 +843,13 @@ Why Cassandra
 ----------
 
 Cassandra provides a truly distributed, fault tolerant design (kind of like an auto-sharded, auto-replicated, master-master database). Cassandra is designed so that if any one node goes down, you can create another node, attach it to the cluster, and retrieve the "lost" data without any downtime (based on your cluster settings). Cassandra provides linearly scalable reads and writes based on the number of nodes in a cluster (and is highly optimized for write throughput). In other words, when you need more reads/sec or writes/sec, you can simply add another node to the cluster. This means that your database can scale automatically similarly to how your API layer can (with good data modeling practices, some initialization scripts & virtual machine tweaks of course).
- 
+
  If you follow good data modeling practices, (see "Data Modeling Notes"), you can do most queries that you would normally do in SQL databases or MongoDB using just CQL (some exceptions are full-text search, graph queries, map reduce jobs - see Elastic Search / Solr for search, Titan for graph queries, Apache Spark / Hadoop for map reduce jobs).
- 
+
  In addition, Cassandra is built with multi-datacenter support (across Wide Area Networks (WAN)).
- 
+
  Also see [this](http://planetcassandra.org/what-is-apache-cassandra/).
- 
+
 Data Modelling Notes
 ----------
 
